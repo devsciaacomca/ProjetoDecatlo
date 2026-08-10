@@ -13,9 +13,6 @@ export default function Home() {
       </div>
 
       <div className="relative flex min-h-screen flex-col">
-        {/* Header */}
-        <Header />
-
         {/* Conteúdo principal */}
         <section className="flex flex-1 items-center justify-center px-6 py-16">
           <div className="mx-auto w-full max-w-4xl text-center">

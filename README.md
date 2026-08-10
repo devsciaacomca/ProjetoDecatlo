@@ -1,36 +1,253 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🚀 Projeto Decatlo — Guia para começar
 
-## Getting Started
+## 1. Antes de começar
 
-First, run the development server:
+Para participar do desenvolvimento do projeto, **mande no grupo o seu usuário do GitHub**.
+
+Exemplo:
+
+> Meu GitHub: `joao123`
+
+Vou adicionar cada integrante como colaborador do repositório.
+
+**Repositório do projeto:**
+
+https://github.com/devsciaacomca/ProjetoDecatlo
+
+**Projeto publicado na Vercel:**
+
+https://projeto-decatlo.vercel.app
+
+---
+
+# 2. Instalar os programas necessários
+
+Antes de clonar o projeto, você precisa ter instalado:
+
+- **Git**
+- **Node.js**
+- **Visual Studio Code**
+
+Depois de instalar, abra o terminal e verifique:
+
+```bash
+git --version
+```
+
+e:
+
+```bash
+node -v
+```
+
+Se os comandos mostrarem as versões instaladas, está tudo certo.
+
+---
+
+# 3. Clonar o projeto
+
+Depois que você for adicionado ao repositório, abra o terminal na pasta onde deseja guardar o projeto.
+
+Execute:
+
+```bash
+git clone https://github.com/devsciaacomca/ProjetoDecatlo.git
+```
+
+Depois entre na pasta:
+
+```bash
+cd ProjetoDecatlo
+```
+
+---
+
+# 4. Abrir no VS Code
+
+Dentro da pasta do projeto, execute:
+
+```bash
+code .
+```
+
+Se o comando `code` não funcionar, basta abrir o VS Code manualmente e selecionar:
+
+**File → Open Folder → ProjetoDecatlo**
+
+---
+
+# 5. Instalar as dependências
+
+Com o terminal dentro da pasta do projeto, execute:
+
+```bash
+npm install
+```
+
+Esse comando instala todas as bibliotecas utilizadas pelo projeto.
+
+⚠️ **Não é necessário baixar ou enviar a pasta `node_modules` pelo GitHub.**
+
+Cada desenvolvedor deve executar o `npm install` na própria máquina.
+
+---
+
+# 6. Executar o projeto
+
+Depois que a instalação terminar, execute:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+O Next.js iniciará o servidor de desenvolvimento.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Normalmente o projeto ficará disponível em:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```text
+http://localhost:3000
+```
 
-## Learn More
+Abra esse endereço no navegador.
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# 7. Fluxo de trabalho
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Depois que o projeto estiver funcionando, **não trabalhe diretamente na `main`**.
 
-## Deploy on Vercel
+Antes de começar uma tarefa, atualize o projeto:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+git pull origin main
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Depois crie uma branch para sua tarefa:
+
+```bash
+git checkout -b nome-da-tarefa
+```
+
+Exemplo:
+
+```bash
+git checkout -b pagina-atletas
+```
+
+Faça suas alterações normalmente.
+
+---
+
+# 8. Salvar suas alterações no GitHub
+
+Depois de terminar uma parte do trabalho:
+
+```bash
+git add .
+```
+
+Depois faça o commit:
+
+```bash
+git commit -m "feat: adiciona pagina de atletas"
+```
+
+E envie sua branch:
+
+```bash
+git push origin nome-da-tarefa
+```
+
+Exemplo:
+
+```bash
+git push origin pagina-atletas
+```
+
+Depois disso, abra um **Pull Request (PR)** no GitHub para que a alteração possa ser revisada e depois integrada à `main`.
+
+---
+
+# 9. Resumo dos comandos
+
+### Primeira vez
+
+```bash
+git clone https://github.com/devsciaacomca/ProjetoDecatlo.git
+
+cd ProjetoDecatlo
+
+npm install
+
+npm run dev
+```
+
+### Para começar uma nova tarefa
+
+```bash
+git pull origin main
+
+git checkout -b minha-tarefa
+```
+
+### Depois de fazer alterações
+
+```bash
+git add .
+
+git commit -m "feat: minha alteração"
+
+git push origin minha-tarefa
+```
+
+Depois é só abrir o Pull Request no GitHub.
+
+---
+
+# ⚠️ Importante
+
+### Não faça:
+
+```bash
+git push origin main
+```
+
+diretamente, salvo quando isso for combinado com o responsável pelo projeto.
+
+### Também não envie:
+
+- `node_modules`
+- `.next`
+- arquivos `.env` ou `.env.local`
+- senhas, tokens ou chaves de API
+
+Se o projeto precisar de alguma variável de ambiente para funcionar, ela deve ser configurada separadamente na máquina de cada desenvolvedor.
+
+---
+
+# 🌐 Projeto online
+
+Para visualizar a versão publicada:
+
+https://projeto-decatlo.vercel.app
+
+A Vercel pode realizar novos deploys a partir das alterações enviadas ao repositório, dependendo da configuração do projeto.
+
+---
+
+## ✅ Checklist
+
+Antes de começar, confirme:
+
+- [ ] Enviei meu usuário do GitHub para o Samuel
+- [ ] Fui adicionado ao repositório
+- [ ] Instalei o Git
+- [ ] Instalei o Node.js
+- [ ] Clonei o projeto
+- [ ] Executei `npm install`
+- [ ] Executei `npm run dev`
+- [ ] Consegui acessar `localhost:3000`
+- [ ] Entendi como criar uma branch
+- [ ] Entendi como enviar um Pull Request
+
+**Se tudo estiver marcado, você já está pronto para começar a desenvolver. 🚀**

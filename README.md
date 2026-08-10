@@ -239,7 +239,7 @@ A Vercel pode realizar novos deploys a partir das alterações enviadas ao repos
 
 Antes de começar, confirme:
 
-- [ ] Enviei meu usuário do GitHub para o Samuel
+- [ ] Enviei meu usuário do GitHub para o Grupo
 - [ ] Fui adicionado ao repositório
 - [ ] Instalei o Git
 - [ ] Instalei o Node.js

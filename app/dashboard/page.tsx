@@ -6,8 +6,8 @@ import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import Footer from "@/components/Footer";
 
-export default function Dashboard() {
-    // este estado está se repetindo em todas paginas que usam o header e sidebar, podemos criar um contexto para ele.
+export default function DashboardPage() {
+  // este estado está se repetindo em todas paginas que usam o header e sidebar, podemos criar um contexto para ele.
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (

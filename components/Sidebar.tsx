@@ -13,11 +13,12 @@ import {
   LogOut,
 } from "lucide-react";
 
+//penso separar as interfaces em outro arquivo, para não poluir o código, mas por enquanto vou deixar aqui mesmo.
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
 }
-
+//
 const menuItems = [
   {
     href: "/dashboard",

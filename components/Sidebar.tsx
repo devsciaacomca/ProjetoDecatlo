@@ -143,14 +143,14 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
         {/* Rodapé do Sidebar */}
         <div className="border-t border-slate-800 p-4">
-          <button
-            type="button"
+          <Link
+            href="/"
             className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-sm text-slate-400 transition hover:bg-slate-800 hover:text-white"
           >
             <LogOut size={18} />
 
             <span>Sair</span>
-          </button>
+          </Link>
         </div>
       </aside>
     </>

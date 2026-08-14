@@ -35,7 +35,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
 
         {/* Usuário */}
         <Link
-          href="/perfil"
+          href="/dashboard/perfil"
           className="flex items-center gap-3 rounded-lg px-2 py-2 transition hover:bg-slate-100"
         >
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-800 text-sm font-semibold text-white">

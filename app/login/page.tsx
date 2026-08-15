@@ -10,6 +10,8 @@ import { useRouter } from "next/navigation";
 const ADMIN_USER = "Administrador";
 const ADMIN_PASSWORD = "Ciaa@dev10";
 
+// Retirar console.log() e comentários de debug antes de colocar em produção. Eles estão aqui apenas para fins de desenvolvimento e depuração.
+
 const validatePassword = (
   password: string,
 ): { valid: boolean; errors: string[] } => {

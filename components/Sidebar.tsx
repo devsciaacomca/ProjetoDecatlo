@@ -26,7 +26,7 @@ const menuItems = [
     icon: LayoutDashboard,
   },
   {
-    href: "/dashboard/cadastro-perguntas",
+    href: "/dashboard/gerenciamento-perguntas",
     label: "Perguntas",
     icon: ClipboardList,
   },

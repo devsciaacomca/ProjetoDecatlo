@@ -2,10 +2,10 @@ import type { DashboardFeature } from "@/types/dashboard";
 
 export const dashboardFeatures: DashboardFeature[] = [
   {
-    href: "/dashboard/cadastro-perguntas",
+    href: "/dashboard/gerenciamento-perguntas",
     icon: "▤",
-    title: "Cadastro de perguntas",
-    description: "Cadastre perguntas e respostas.",
+    title: "Gerenciamento de perguntas",
+    description: "Cadastre, edite e exclua perguntas do sistema.",
     action: "Acessar →",
   },
   {

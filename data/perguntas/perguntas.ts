@@ -1,11 +1,15 @@
 import type { Pergunta } from "@/types/perguntas";
-
 export const perguntas: Pergunta[] = [
   {
     id: 128,
     assunto: "História",
     tipo: "objetiva",
     enunciado: "Em que ano ocorreu a Proclamação da República no Brasil?",
+    alternativas: [
+      { id: 1, texto: "1822" },
+      { id: 2, texto: "1888" },
+      { id: 3, texto: "1889" },
+    ],
     respostaCorreta: "1889",
     criadaEm: "14/08/2026",
   },
@@ -14,6 +18,11 @@ export const perguntas: Pergunta[] = [
     assunto: "Geografia",
     tipo: "objetiva",
     enunciado: "Qual é o maior país da América do Sul em território?",
+    alternativas: [
+      { id: 1, texto: "Argentina" },
+      { id: 2, texto: "Brasil" },
+      { id: 3, texto: "Colômbia" },
+    ],
     respostaCorreta: "Brasil",
     criadaEm: "14/08/2026",
   },
@@ -29,6 +38,11 @@ export const perguntas: Pergunta[] = [
     assunto: "Português",
     tipo: "objetiva",
     enunciado: "Qual das alternativas apresenta um substantivo?",
+    alternativas: [
+      { id: 1, texto: "Correr" },
+      { id: 2, texto: "Casa" },
+      { id: 3, texto: "Bonito" },
+    ],
     respostaCorreta: "Casa",
     criadaEm: "13/08/2026",
   },
@@ -44,6 +58,11 @@ export const perguntas: Pergunta[] = [
     assunto: "História",
     tipo: "objetiva",
     enunciado: "Quem proclamou a Independência do Brasil?",
+    alternativas: [
+      { id: 1, texto: "Tiradentes" },
+      { id: 2, texto: "Dom Pedro I" },
+      { id: 3, texto: "Dom João VI" },
+    ],
     respostaCorreta: "Dom Pedro I",
     criadaEm: "12/08/2026",
   },
@@ -52,6 +71,11 @@ export const perguntas: Pergunta[] = [
     assunto: "Geografia",
     tipo: "objetiva",
     enunciado: "Qual é a capital do Brasil?",
+    alternativas: [
+      { id: 1, texto: "Rio de Janeiro" },
+      { id: 2, texto: "São Paulo" },
+      { id: 3, texto: "Brasília" },
+    ],
     respostaCorreta: "Brasília",
     criadaEm: "11/08/2026",
   },
@@ -60,6 +84,11 @@ export const perguntas: Pergunta[] = [
     assunto: "Matemática",
     tipo: "objetiva",
     enunciado: "Quanto é 10 × 5?",
+    alternativas: [
+      { id: 1, texto: "40" },
+      { id: 2, texto: "50" },
+      { id: 3, texto: "60" },
+    ],
     respostaCorreta: "50",
     criadaEm: "11/08/2026",
   },
@@ -75,6 +104,11 @@ export const perguntas: Pergunta[] = [
     assunto: "História",
     tipo: "objetiva",
     enunciado: "Em que ano foi assinada a Lei Áurea?",
+    alternativas: [
+      { id: 1, texto: "1822" },
+      { id: 2, texto: "1888" },
+      { id: 3, texto: "1889" },
+    ],
     respostaCorreta: "1888",
     criadaEm: "10/08/2026",
   },
@@ -83,6 +117,11 @@ export const perguntas: Pergunta[] = [
     assunto: "Geografia",
     tipo: "objetiva",
     enunciado: "Qual é o maior oceano do planeta?",
+    alternativas: [
+      { id: 1, texto: "Oceano Atlântico" },
+      { id: 2, texto: "Oceano Índico" },
+      { id: 3, texto: "Oceano Pacífico" },
+    ],
     respostaCorreta: "Oceano Pacífico",
     criadaEm: "09/08/2026",
   },

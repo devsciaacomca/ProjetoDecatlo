@@ -216,7 +216,9 @@ export default function GerenciamentoPerguntasPage() {
                         <th className="px-6 py-4 font-semibold text-slate-700">
                           Tipo
                         </th>
-
+                        <th className="px-6 py-4 font-semibold text-slate-700">
+                          Alternativas
+                        </th>
                         <th className="px-6 py-4 font-semibold text-slate-700">
                           Criada em
                         </th>
@@ -261,6 +263,17 @@ export default function GerenciamentoPerguntasPage() {
                                 ? "Objetiva"
                                 : "Aberta"}
                             </span>
+                          </td>
+
+                          <td className="whitespace-nowrap px-6 py-4">
+                            {pergunta.tipo === "objetiva" ? (
+                              <span className="text-slate-600">
+                                {pergunta.alternativas?.length ?? 0}{" "}
+                                alternativas
+                              </span>
+                            ) : (
+                              <span className="text-slate-400">—</span>
+                            )}
                           </td>
 
                           <td className="whitespace-nowrap px-6 py-4 text-slate-500">

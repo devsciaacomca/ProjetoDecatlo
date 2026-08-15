@@ -5,11 +5,14 @@ import { useState } from "react";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
+import { useRouter } from "next/navigation";
 
 const ADMIN_USER = "Administrador";
 const ADMIN_PASSWORD = "Ciaa@dev10";
 
-const validatePassword = (password: string): { valid: boolean; errors: string[] } => {
+const validatePassword = (
+  password: string,
+): { valid: boolean; errors: string[] } => {
   const errors: string[] = [];
 
   if (password.length < 8) {
@@ -35,10 +38,14 @@ const validatePassword = (password: string): { valid: boolean; errors: string[] 
 };
 
 export default function LoginPage() {
+  const router = useRouter();
   const [usuario, setUsuario] = useState("");
   const [senha, setSenha] = useState("");
   const [erros, setErros] = useState<{ [key: string]: string[] }>({});
-  const [mensagem, setMensagem] = useState<{ tipo: "sucesso" | "erro"; texto: string } | null>(null);
+  const [mensagem, setMensagem] = useState<{
+    tipo: "sucesso" | "erro";
+    texto: string;
+  } | null>(null);
   const [carregando, setCarregando] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -83,7 +90,7 @@ export default function LoginPage() {
       });
       // Aqui você pode adicionar redirecionamento ou armazenar token
       setTimeout(() => {
-        // window.location.href = "/dashboard";
+        router.replace("/dashboard");
       }, 1500);
     } else {
       console.log("DEBUG - Credenciais incorretas!");
@@ -155,7 +162,9 @@ export default function LoginPage() {
                   }`}
                 />
                 {erros.usuario && (
-                  <p className="mt-1 text-xs text-red-400">{erros.usuario[0]}</p>
+                  <p className="mt-1 text-xs text-red-400">
+                    {erros.usuario[0]}
+                  </p>
                 )}
               </div>
 

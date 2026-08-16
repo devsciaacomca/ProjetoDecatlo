@@ -12,7 +12,14 @@ import { successResponse, errorResponse } from '@/lib/api-response';
 export async function POST(request: NextRequest) {
   try {
     // 1. Tenta extrair o corpo da requisição (JSON)
-    const body = await request.json();
+    let body;
+    try {
+      body = await request.json();
+    } catch (e) {
+      // Se o usuário esquecer de enviar dados (JSON vazio), colocamos um objeto vazio
+      // para que o Zod consiga analisar e retornar os erros corretos (ex: e-mail obrigatório)
+      body = {};
+    }
 
     // 2. Valida os dados usando o nosso esquema Zod (lembra que você mudou para 8 caracteres? Ele vai checar isso aqui!)
     // O safeParse não "quebra" o código se der erro, ele retorna um objeto com success = false.

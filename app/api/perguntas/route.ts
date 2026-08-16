@@ -33,7 +33,12 @@ export async function GET() {
 // ==========================================
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    let body;
+    try {
+      body = await request.json();
+    } catch (e) {
+      body = {};
+    }
 
     // Passamos a bola para o Zod verificar se as regras de negócio foram seguidas
     // Ex: "Se for objetiva, mandou as alternativas?"

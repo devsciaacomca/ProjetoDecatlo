@@ -38,7 +38,12 @@ export async function GET() {
 // ==========================================
 export async function PUT(request: NextRequest) {
   try {
-    const body = await request.json();
+    let body;
+    try {
+      body = await request.json();
+    } catch (e) {
+      body = {};
+    }
 
     // Como o jogo tem muitos estados possíveis, o ideal aqui seria ter um schema Zod
     // Mas para simplificar, vamos assumir que recebemos uma ação

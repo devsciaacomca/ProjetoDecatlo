@@ -33,7 +33,12 @@ export async function GET() {
 // ==========================================
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    let body;
+    try {
+      body = await request.json();
+    } catch (e) {
+      body = {};
+    }
 
     // Para fins práticos, o front envia o que aconteceu
     if (!body.acao || !body.usuario) {

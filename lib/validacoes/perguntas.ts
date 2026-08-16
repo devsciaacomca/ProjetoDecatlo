@@ -15,16 +15,15 @@ const alternativaSchema = z.object({
 // Esquema principal para criar/editar uma pergunta
 export const questionSchema = z.object({
   assunto: z
-    .string({ required_error: 'O assunto é obrigatório.' })
+    .string({ message: 'O assunto é obrigatório.' })
     .min(3, 'O assunto deve ter pelo menos 3 caracteres.'),
     
-  tipo: z.enum(['objetiva', 'aberta'], {
-    required_error: 'O tipo da pergunta é obrigatório.',
-    invalid_type_error: 'O tipo deve ser "objetiva" ou "aberta".',
+  tipo: z.enum(['objetiva', 'aberta'] as const, {
+    message: 'O tipo da pergunta é obrigatório.',
   }),
 
   enunciado: z
-    .string({ required_error: 'O enunciado é obrigatório.' })
+    .string({ message: 'O enunciado é obrigatório.' })
     .min(10, 'O enunciado deve ser mais descritivo (mínimo de 10 caracteres).'),
 
   // Para perguntas objetivas, precisamos de alternativas

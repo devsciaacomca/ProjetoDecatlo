@@ -144,7 +144,7 @@ export default function DashboardPage() {
 
                   {/* Perguntas */}
                   <Link
-                    href="/dashboard/cadastro-perguntas"
+                    href="/dashboard/gerenciamento-perguntas"
                     className="group rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
                   >
                     <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-lg bg-slate-100">

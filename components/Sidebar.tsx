@@ -55,7 +55,7 @@ const menuSections = [
     title: "Banco de perguntas",
     items: [
       {
-        href: "/dashboard/cadastro-perguntas",
+        href: "/dashboard/gerenciamento-perguntas",
         label: "Perguntas",
         icon: ClipboardList,
       },

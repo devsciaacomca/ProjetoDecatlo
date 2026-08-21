@@ -5,10 +5,11 @@ import { useState } from "react";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
+import Link from "next/link";
 
 type TipoPergunta = "objetiva" | "aberta";
 
-export default function ConfiguracaoJogoPage() {
+export default function NovaPartidaPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [nomeJogo, setNomeJogo] = useState("Decatlo");
@@ -39,7 +40,7 @@ export default function ConfiguracaoJogoPage() {
               {/* Cabeçalho da página */}
               <div className="mb-6">
                 <h1 className="text-xl font-semibold sm:text-2xl">
-                  Configuração do jogo
+                  Nova partida
                 </h1>
 
                 <p className="mt-1 text-sm text-slate-500">
@@ -519,12 +520,12 @@ export default function ConfiguracaoJogoPage() {
                         </p>
                       </div>
 
-                      <button
-                        type="button"
+                      <Link
+                        href="/dashboard/partidas/123456"
                         className="w-full rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
                       >
-                        Iniciar partida
-                      </button>
+                        Criar partida
+                      </Link>
                     </div>
                   </div>
                 </aside>

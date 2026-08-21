@@ -17,6 +17,7 @@ export default function CadastroPerguntasPage() {
     { id: 2, texto: "" },
     { id: 3, texto: "" },
   ]);
+
   const [respostaCorreta, setRespostaCorreta] = useState<number | null>(null);
   const assuntos = [...new Set(perguntas.map((pergunta) => pergunta.assunto))];
 

@@ -16,14 +16,13 @@ import {
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
-
-type PartidaStatus = "configuracao" | "pronta" | "em_andamento" | "finalizada";
-
+import { PartidaStatus } from "@/types/partidas";
+import { statusConfig } from "@/data/partidas/partidas";
 export default function PartidaPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Temporário.
-  // Posteriormente esses dados virão da API pelo ID da partida.
+  // Mudar para buscar pelo ID dos dados partidas.
   const partida = {
     id: "123",
     nome: "Decatlo 2026",
@@ -34,25 +33,6 @@ export default function PartidaPage() {
     perguntaAtual: 0,
     tempoResposta: 30,
     tipoPergunta: "Objetiva",
-  };
-
-  const statusConfig = {
-    configuracao: {
-      label: "Em configuração",
-      className: "bg-slate-100 text-slate-700",
-    },
-    pronta: {
-      label: "Pronta para iniciar",
-      className: "bg-amber-100 text-amber-700",
-    },
-    em_andamento: {
-      label: "Em andamento",
-      className: "bg-green-100 text-green-700",
-    },
-    finalizada: {
-      label: "Finalizada",
-      className: "bg-blue-100 text-blue-700",
-    },
   };
 
   const status = statusConfig[partida.status];

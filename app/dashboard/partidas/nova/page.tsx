@@ -521,7 +521,7 @@ export default function NovaPartidaPage() {
                       </div>
 
                       <Link
-                        href="/dashboard/partidas/123456"
+                        href="/dashboard/partidas/123"
                         className="w-full rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
                       >
                         Criar partida

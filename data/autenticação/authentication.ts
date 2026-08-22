@@ -1,8 +1,4 @@
-export type AuthenticationData = {
-  usuario: string;
-  senha: string;
-  nome: string;
-};
+import { AuthenticationData } from "@/types/authentication";
 
 // Credenciais usadas somente para demonstracao local.
 export const testAuthentication: AuthenticationData = {

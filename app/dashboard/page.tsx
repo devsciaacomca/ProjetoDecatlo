@@ -2,14 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import {
-  Plus,
-  Gamepad2,
-  PlayCircle,
-  List,
-  Monitor,
-  ClipboardList,
-} from "lucide-react";
+import { Plus, Gamepad2, List, Monitor, ClipboardList } from "lucide-react";
 
 // components
 import Header from "@/components/Header";
@@ -17,10 +10,14 @@ import Sidebar from "@/components/Sidebar";
 import Footer from "@/components/Footer";
 
 // Data
+import { partidas } from "@/data/partidas/partidas";
 import { dashboardActivities } from "@/data/dashboard/activities";
 import { dashboardStats } from "@/data/dashboard/stats";
 
 export default function DashboardPage() {
+  const partidaEmAndamento = partidas.find(
+    (partida) => partida.status === "em_andamento",
+  );
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
@@ -73,44 +70,81 @@ export default function DashboardPage() {
 
               {/* Partida em andamento */}
               <section className="mt-6 rounded-xl border border-slate-200 bg-white shadow-sm">
-                <div className="border-b border-slate-200 px-6 py-5">
-                  <div className="flex items-center gap-2">
-                    <PlayCircle size={19} />
+                {partidaEmAndamento ? (
+                  <div className="px-6 py-6">
+                    <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="h-2.5 w-2.5 rounded-full bg-green-500" />
 
-                    <h2 className="font-semibold">Partida em andamento</h2>
-                  </div>
+                          <span className="text-xs font-semibold uppercase tracking-wide text-green-700">
+                            Em andamento
+                          </span>
+                        </div>
 
-                  <p className="mt-1 text-sm text-slate-500">
-                    Acompanhe e controle a partida que está sendo executada
-                    atualmente.
-                  </p>
-                </div>
+                        <h3 className="mt-2 text-lg font-semibold">
+                          {partidaEmAndamento.nome}
+                        </h3>
 
-                {/* Estado sem partida */}
-                <div className="px-6 py-8">
-                  <div className="flex flex-col items-center justify-center text-center">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
-                      <Gamepad2 size={22} className="text-slate-400" />
+                        <p className="mt-1 text-sm text-slate-500">
+                          {partidaEmAndamento.equipe1}{" "}
+                          <span className="mx-1">×</span>{" "}
+                          {partidaEmAndamento.equipe2}
+                        </p>
+
+                        <p className="mt-2 text-xs text-slate-400">
+                          Pergunta {partidaEmAndamento.perguntaAtual} de{" "}
+                          {partidaEmAndamento.perguntas}
+                        </p>
+                      </div>
+
+                      <div className="flex flex-col gap-2 sm:flex-row">
+                        <Link
+                          href={`/dashboard/partidas/${partidaEmAndamento.id}/controle`}
+                          className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
+                        >
+                          <Gamepad2 size={17} />
+                          Controlar partida
+                        </Link>
+
+                        <Link
+                          href={`/dashboard/telao/${partidaEmAndamento.id}`}
+                          target="_blank"
+                          className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                        >
+                          <Monitor size={17} />
+                          Abrir telão
+                        </Link>
+                      </div>
                     </div>
-
-                    <p className="mt-4 text-sm font-medium">
-                      Nenhuma partida em andamento
-                    </p>
-
-                    <p className="mt-1 max-w-md text-sm text-slate-500">
-                      Quando uma partida for iniciada, ela aparecerá aqui para
-                      acesso rápido ao controle e ao telão.
-                    </p>
-
-                    <Link
-                      href="/dashboard/partidas"
-                      className="mt-4 inline-flex items-center gap-2 text-sm font-semibold hover:underline"
-                    >
-                      <List size={16} />
-                      Ver partidas
-                    </Link>
                   </div>
-                </div>
+                ) : (
+                  /* Estado sem partida */
+                  <div className="px-6 py-8">
+                    <div className="flex flex-col items-center justify-center text-center">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
+                        <Gamepad2 size={22} className="text-slate-400" />
+                      </div>
+
+                      <p className="mt-4 text-sm font-medium">
+                        Nenhuma partida em andamento
+                      </p>
+
+                      <p className="mt-1 max-w-md text-sm text-slate-500">
+                        Quando uma partida for iniciada, ela aparecerá aqui para
+                        acesso rápido ao controle e ao telão.
+                      </p>
+
+                      <Link
+                        href="/dashboard/partidas"
+                        className="mt-4 inline-flex items-center gap-2 text-sm font-semibold hover:underline"
+                      >
+                        <List size={16} />
+                        Ver partidas
+                      </Link>
+                    </div>
+                  </div>
+                )}
               </section>
 
               {/* Acesso rápido */}

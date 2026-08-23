@@ -218,7 +218,9 @@ export default function DashboardPage() {
                 </div>
               </section>
 
-              {/* Estatísticas */}
+              {/* Estatísticas 
+              conteúdo estático, futuramente será dinâmico com base em dados reais do sistema
+              */}
               <section className="mt-8">
                 <div className="mb-4">
                   <h2 className="text-lg font-semibold">Estatísticas</h2>

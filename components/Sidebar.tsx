@@ -1,17 +1,18 @@
 "use client";
 
-import Link from "next/link";
 import {
-  LayoutDashboard,
   ClipboardList,
-  Users,
-  Settings,
   Gamepad2,
   History,
-  Monitor,
-  X,
+  LayoutDashboard,
   LogOut,
+  Monitor,
+  Settings,
+  Users,
+  X,
 } from "lucide-react";
+import { signOut } from "next-auth/react";
+import Link from "next/link";
 
 //penso separar as interfaces em outro arquivo, para não poluir o código, mas por enquanto vou deixar aqui mesmo.
 interface SidebarProps {
@@ -143,14 +144,18 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
         {/* Rodapé do Sidebar */}
         <div className="border-t border-slate-800 p-4">
-          <Link
-            href="/"
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              void signOut({ callbackUrl: "/" });
+            }}
             className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-sm text-slate-400 transition hover:bg-slate-800 hover:text-white"
           >
             <LogOut size={18} />
 
             <span>Sair</span>
-          </Link>
+          </button>
         </div>
       </aside>
     </>

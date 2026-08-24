@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import LoginBrand from "@/components/login/LoginBrand";
 import { authenticate, type LoginState } from "@/app/login/actions";
 
 const estadoInicial: LoginState = {};
@@ -21,20 +22,7 @@ export default function LoginPage() {
       <div className="relative flex min-h-screen items-center justify-center px-6 py-16">
         <div className="w-full max-w-md">
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-8 shadow-2xl backdrop-blur-sm">
-            <div className="mb-6 text-center">
-              <div className="mb-3 inline-flex items-center gap-3 rounded-full border border-cyan-400/20 bg-cyan-400/5 px-4 py-2 text-[10px] font-medium uppercase tracking-[0.25em] text-cyan-300">
-                <span className="relative flex h-2.5 w-2.5">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-50" />
-                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-cyan-400" />
-                </span>
-                Sistema de Arguição
-              </div>
-
-              <h1 className="text-4xl font-black tracking-tight text-white sm:text-5xl">
-                DECAtlo
-              </h1>
-              <div className="mx-auto mt-4 h-px w-20 bg-cyan-400/50" />
-            </div>
+            <LoginBrand />
 
             <form className="space-y-5" action={formAction}>
               <input type="hidden" name="callbackUrl" value="/dashboard" />
@@ -92,6 +80,23 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
+
+      {pending ? (
+        <div
+          className="fixed inset-0 z-10 flex items-center justify-center bg-[#050b14]/90 px-6 backdrop-blur-sm"
+          role="status"
+          aria-live="polite"
+        >
+          <div className="flex flex-col items-center gap-4 text-center">
+            <div
+              className="h-10 w-10 animate-spin rounded-full border-4 border-white/20 border-t-cyan-400"
+              aria-hidden="true"
+            />
+            <p className="text-base font-medium text-white">Carregando...</p>
+            <p className="text-sm text-white/60">Aguarde um momento.</p>
+          </div>
+        </div>
+      ) : null}
     </main>
   );
 }

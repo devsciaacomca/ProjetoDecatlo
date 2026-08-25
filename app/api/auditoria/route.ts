@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api-response';
+import { auth } from '@/lib/auth';
 
 /**
  * Rota: /api/audit
@@ -13,6 +14,14 @@ import { successResponse, errorResponse } from '@/lib/api-response';
 // ==========================================
 export async function GET() {
   try {
+    // 1. Camada de Segurança (Autenticação)
+    // Ler os logs é uma ação sensível, então exigimos que o usuário esteja logado.
+    // Futuramente, poderemos checar se ele tem a 'role' de ADMIN.
+    const session = await auth();
+    if (!session) {
+      return errorResponse('Acesso negado ao histórico de auditoria.', 401);
+    }
+
     // TODO (Fase 3): prisma.auditLog.findMany({ orderBy: { data: 'desc' } })
     
     // Dados de demonstração
@@ -33,6 +42,12 @@ export async function GET() {
 // ==========================================
 export async function POST(request: NextRequest) {
   try {
+    // Para registrar um log, o usuário também precisa estar logado
+    const session = await auth();
+    if (!session) {
+      return errorResponse('Acesso negado para registro de auditoria.', 401);
+    }
+
     let body;
     try {
       body = await request.json();
@@ -40,7 +55,6 @@ export async function POST(request: NextRequest) {
       body = {};
     }
 
-    // Para fins práticos, o front envia o que aconteceu
     if (!body.acao || !body.usuario) {
       return errorResponse('Ação e Usuário são obrigatórios para registrar log.', 400);
     }

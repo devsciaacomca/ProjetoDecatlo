@@ -1,13 +1,15 @@
 import { z } from 'zod';
 
 /**
- * Esquemas de validação para a Criação e Edição de Perguntas.
+ * Esquemas de validação (Zod) para a Criação e Edição de Perguntas.
  * 
- * Baseado na interface Pergunta existente, criamos regras estritas para 
- * quando a API for receber os dados de uma nova pergunta.
+ * Por que usar Zod?
+ * Ele garante que os dados que a nossa API recebe do frontend estão
+ * no formato exato que esperamos. Isso evita que o banco de dados
+ * tente salvar informações incompletas ou inválidas.
  */
 
-// Como alternativas são opcionais ou só usadas em "objetivas", criamos um esquema para elas:
+// Como alternativas são opcionais ou só usadas em "objetivas", criamos um esquema separado para elas:
 const alternativaSchema = z.object({
   texto: z.string().min(1, 'O texto da alternativa não pode ser vazio.'),
 });
@@ -27,20 +29,20 @@ export const questionSchema = z.object({
     .min(10, 'O enunciado deve ser mais descritivo (mínimo de 10 caracteres).'),
 
   // Para perguntas objetivas, precisamos de alternativas
-  // Opcional por padrão, mas podemos validar a dependência mais pra frente no código
+  // Declaramos como opcional por padrão, mas validamos a obrigatoriedade logo abaixo no `.refine()`
   alternativas: z.array(alternativaSchema).optional(),
 
   respostaCorreta: z.string().optional(),
 }).refine((data) => {
-  // Regra de Negócio: Se for objetiva, TEM QUE TER alternativas
+  // Regra de Negócio: Se a pergunta for do tipo 'objetiva', TEM QUE TER pelo menos 2 alternativas cadastradas.
   if (data.tipo === 'objetiva' && (!data.alternativas || data.alternativas.length < 2)) {
     return false; // Falhou na validação
   }
-  return true; // Passou
+  return true; // Passou na validação
 }, {
   message: 'Perguntas objetivas precisam de pelo menos 2 alternativas.',
-  path: ['alternativas'], // Onde o erro será "pendurado" para o Frontend
+  path: ['alternativas'], // Indica para o Frontend em qual campo o erro deve ser mostrado
 });
 
-// Tipo gerado automaticamente pelo Zod
+// Tipo TypeScript gerado automaticamente a partir do nosso esquema Zod
 export type QuestionRequest = z.infer<typeof questionSchema>;

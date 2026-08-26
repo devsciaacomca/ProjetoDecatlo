@@ -81,7 +81,7 @@ export default function PerfilPage() {
     }
   }
 
-  function handlePasswordSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handlePasswordSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     setMensagem(null);

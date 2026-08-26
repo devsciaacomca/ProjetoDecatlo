@@ -58,16 +58,27 @@ export default function PerfilPage() {
     );
   }
 
-  function handleProfileSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleProfileSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    // Futuramente:
-    // await fetch("/api/usuario/perfil", {
-    //   method: "PATCH",
-    //   body: JSON.stringify({ nome, email }),
-    // });
+    setMensagem(null);
+    try {
+      const response = await fetch("/api/usuario/perfil", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nome, email }),
+      });
 
-    setMensagem("Dados do perfil preparados para atualização.");
+      const data = await response.json();
+
+      if (!response.ok) {
+        setMensagem(data.error || "Erro ao atualizar perfil.");
+      } else {
+        setMensagem("Perfil atualizado com sucesso!");
+      }
+    } catch (error) {
+      setMensagem("Erro inesperado ao atualizar perfil.");
+    }
   }
 
   function handlePasswordSubmit(event: FormEvent<HTMLFormElement>) {
@@ -90,20 +101,29 @@ export default function PerfilPage() {
       return;
     }
 
-    // Futuramente:
-    // await fetch("/api/usuario/senha", {
-    //   method: "PATCH",
-    //   body: JSON.stringify({
-    //     senhaAtual,
-    //     novaSenha,
-    //   }),
-    // });
+    try {
+      const response = await fetch("/api/usuario/senha", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          senhaAtual,
+          novaSenha,
+        }),
+      });
 
-    setMensagem("Senha preparada para atualização.");
+      const data = await response.json();
 
-    setSenhaAtual("");
-    setNovaSenha("");
-    setConfirmarSenha("");
+      if (!response.ok) {
+        setMensagem(data.error || "Erro ao atualizar senha.");
+      } else {
+        setMensagem("Senha atualizada com sucesso!");
+        setSenhaAtual("");
+        setNovaSenha("");
+        setConfirmarSenha("");
+      }
+    } catch (error) {
+      setMensagem("Erro inesperado ao atualizar senha.");
+    }
   }
 
   return (

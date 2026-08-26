@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   Search,
   Plus,
@@ -26,41 +26,7 @@ interface Usuario {
   ativo: boolean;
 }
 
-//trocar futuramente para const response = await fetch("/api/usuarios");
-const usuariosIniciais: Usuario[] = [
-  {
-    id: 1,
-    nome: "Administrador do Sistema",
-    email: "admin@decatlo.com",
-    nip: "00000001",
-    role: "Administrador",
-    ativo: true,
-  },
-  {
-    id: 2,
-    nome: "João Silva",
-    email: "joao@decatlo.com",
-    nip: "12345678",
-    role: "Apresentador",
-    ativo: true,
-  },
-  {
-    id: 3,
-    nome: "Maria Santos",
-    email: "maria@decatlo.com",
-    nip: "87654321",
-    role: "Cadastrador",
-    ativo: true,
-  },
-  {
-    id: 4,
-    nome: "Carlos Oliveira",
-    email: "carlos@decatlo.com",
-    nip: "45678912",
-    role: "Usuário",
-    ativo: false,
-  },
-];
+const usuariosIniciais: Usuario[] = [];
 
 //Verificar
 const roles: Role[] = [
@@ -76,6 +42,22 @@ export default function UsuariosPage() {
   const [usuarios, setUsuarios] = useState<Usuario[]>(usuariosIniciais);
 
   const [busca, setBusca] = useState("");
+
+  async function carregarUsuarios() {
+    try {
+      const response = await fetch("/api/usuarios");
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setUsuarios(data.data);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  useEffect(() => {
+    carregarUsuarios();
+  }, []);
 
   const [modalAberto, setModalAberto] = useState(false);
 
@@ -140,58 +122,83 @@ export default function UsuariosPage() {
     setUsuarioEditando(null);
   }
 
-  function salvarUsuario(event: React.FormEvent<HTMLFormElement>) {
+  const roleToId: Record<Role, number> = {
+    "Administrador": 1,
+    "Apresentador": 2,
+    "Cadastrador": 3,
+    "Usuário": 4
+  };
+
+  async function salvarUsuario(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (!form.nome.trim() || !form.email.trim() || !form.nip.trim()) {
       return;
     }
 
-    if (usuarioEditando) {
-      setUsuarios((usuariosAtuais) =>
-        usuariosAtuais.map((usuario) =>
-          usuario.id === usuarioEditando.id
-            ? {
-                ...usuario,
-                nome: form.nome.trim(),
-                email: form.email.trim(),
-                nip: form.nip.trim(),
-                role: form.role,
-                ativo: form.ativo,
-              }
-            : usuario,
-        ),
-      );
-    } else {
-      const novoUsuario: Usuario = {
-        id: Date.now(),
-        nome: form.nome.trim(),
-        email: form.email.trim(),
-        nip: form.nip.trim(),
-        role: form.role,
-        ativo: form.ativo,
-      };
+    const payload = {
+      nome: form.nome.trim(),
+      email: form.email.trim(),
+      nip: form.nip.trim(),
+      roleId: roleToId[form.role],
+      ativo: form.ativo,
+      ...(form.senha ? { senha: form.senha } : {})
+    };
 
-      setUsuarios((usuariosAtuais) => [...usuariosAtuais, novoUsuario]);
+    try {
+      if (usuarioEditando) {
+        const response = await fetch(`/api/usuarios/${usuarioEditando.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        if (response.ok) {
+          carregarUsuarios();
+          fecharModal();
+        } else {
+          alert("Erro ao editar usuário.");
+        }
+      } else {
+        const response = await fetch("/api/usuarios", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        if (response.ok) {
+          carregarUsuarios();
+          fecharModal();
+        } else {
+          const data = await response.json();
+          alert(data.error || "Erro ao criar usuário.");
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Erro de conexão.");
     }
-
-    fecharModal();
   }
 
-  function excluirUsuario(id: number) {
+  async function excluirUsuario(id: number) {
     const usuario = usuarios.find((item) => item.id === id);
-
     if (!usuario) return;
 
     const confirmar = window.confirm(
-      `Deseja realmente excluir o usuário "${usuario.nome}"?`,
+      `Deseja realmente excluir o usuário "${usuario.nome}"?`
     );
-
     if (!confirmar) return;
 
-    setUsuarios((usuariosAtuais) =>
-      usuariosAtuais.filter((item) => item.id !== id),
-    );
+    try {
+      const response = await fetch(`/api/usuarios/${id}`, {
+        method: "DELETE"
+      });
+      if (response.ok) {
+        carregarUsuarios();
+      } else {
+        alert("Erro ao excluir usuário.");
+      }
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   function alternarStatus(usuario: Usuario) {
@@ -490,6 +497,7 @@ export default function UsuariosPage() {
                     id="nip"
                     type="text"
                     value={form.nip}
+                    disabled={!!usuarioEditando}
                     onChange={(event) =>
                       setForm({
                         ...form,
@@ -497,7 +505,11 @@ export default function UsuariosPage() {
                       })
                     }
                     placeholder="Número de identificação"
-                    className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm outline-none focus:border-slate-700 focus:ring-2 focus:ring-slate-200"
+                    className={`w-full rounded-lg border px-4 py-3 text-sm outline-none focus:ring-2 ${
+                      usuarioEditando
+                        ? "border-slate-200 bg-slate-50 text-slate-500 cursor-not-allowed"
+                        : "border-slate-300 bg-white focus:border-slate-700 focus:ring-slate-200"
+                    }`}
                   />
                 </div>
 

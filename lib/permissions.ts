@@ -9,3 +9,13 @@ export const PERMISSIONS = [
 ] as const;
 
 export type PermissionChave = (typeof PERMISSIONS)[number]["chave"];
+
+import { Session } from "next-auth";
+
+/**
+ * Verifica se um usuário possui determinada permissão
+ */
+export function hasPermission(session: Session | null, chave: PermissionChave): boolean {
+  if (!session?.user?.permissions) return false;
+  return session.user.permissions.includes(chave);
+}

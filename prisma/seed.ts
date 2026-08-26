@@ -30,13 +30,26 @@ async function main() {
 
   const adminRole = await prisma.role.upsert({
     where: { nome: "Administrador" },
-    update: {
-      descricao: "Acesso completo ao sistema",
-    },
-    create: {
-      nome: "Administrador",
-      descricao: "Acesso completo ao sistema",
-    },
+    update: { descricao: "Acesso completo ao sistema" },
+    create: { nome: "Administrador", descricao: "Acesso completo ao sistema" },
+  });
+
+  const apresentadorRole = await prisma.role.upsert({
+    where: { nome: "Apresentador" },
+    update: { descricao: "Pode apresentar o telão" },
+    create: { nome: "Apresentador", descricao: "Pode apresentar o telão" },
+  });
+
+  const cadastradorRole = await prisma.role.upsert({
+    where: { nome: "Cadastrador" },
+    update: { descricao: "Pode gerenciar perguntas e usuários" },
+    create: { nome: "Cadastrador", descricao: "Pode gerenciar perguntas e usuários" },
+  });
+
+  const usuarioRole = await prisma.role.upsert({
+    where: { nome: "Usuário" },
+    update: { descricao: "Usuário padrão" },
+    create: { nome: "Usuário", descricao: "Usuário padrão" },
   });
 
   await Promise.all(

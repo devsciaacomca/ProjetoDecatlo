@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
 export default function PerfilPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -375,6 +376,8 @@ export default function PerfilPage() {
               </div>
             </div>
           </main>
+
+          <Footer />
         </section>
       </div>
     </main>

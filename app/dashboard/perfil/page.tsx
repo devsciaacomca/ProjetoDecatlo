@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import {
   User,
@@ -27,6 +27,15 @@ export default function PerfilPage() {
   const [nome, setNome] = useState(user?.nome ?? user?.name ?? "");
   const [email, setEmail] = useState(user?.email ?? "");
   const [nip, setNip] = useState(user?.nip ?? "");
+
+  // Sincroniza o estado local assim que a sessão for carregada pela primeira vez
+  useEffect(() => {
+    if (user) {
+      setNome(user.nome ?? user.name ?? "");
+      setEmail(user.email ?? "");
+      setNip(user.nip ?? "");
+    }
+  }, [user]);
 
   const [senhaAtual, setSenhaAtual] = useState("");
   const [novaSenha, setNovaSenha] = useState("");

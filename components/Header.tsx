@@ -2,15 +2,15 @@
 
 import { Menu } from "lucide-react";
 import Link from "next/link";
-import { DashboardUser } from "@/types/dashboard";
+import { useUser } from "@/contexts/UserContext";
 interface HeaderProps {
-  user: DashboardUser;
   onMenuClick: () => void;
 }
 
-export default function Header({ user, onMenuClick }: HeaderProps) {
-  const nome = user.nome ?? "Usuário";
-  const role = user.role ?? "";
+export default function Header({ onMenuClick }: HeaderProps) {
+  const { user } = useUser();
+  const nome = user?.nome ?? "Usuário";
+  const role = user?.role ?? "";
   const inicial = nome.trim().charAt(0).toUpperCase() || "?";
 
   return (

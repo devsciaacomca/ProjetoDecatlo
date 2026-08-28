@@ -5,30 +5,21 @@ import { useState } from "react";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import Footer from "@/components/Footer";
-import { DashboardUser } from "@/types/dashboard";
-
-interface DashboardShellProps {
-  children: React.ReactNode;
-  user: DashboardUser;
-}
 
 export default function DashboardShell({
   children,
-  user,
-}: DashboardShellProps) {
+}: {
+  children: React.ReactNode;
+}) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
     <main className="min-h-screen bg-slate-100 text-slate-900">
       <div className="flex min-h-screen">
-        <Sidebar
-          user={user}
-          isOpen={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
-        />
+        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
         <section className="flex min-w-0 flex-1 flex-col">
-          <Header user={user} onMenuClick={() => setSidebarOpen(true)} />
+          <Header onMenuClick={() => setSidebarOpen(true)} />
 
           <main className="flex-1">{children}</main>
 

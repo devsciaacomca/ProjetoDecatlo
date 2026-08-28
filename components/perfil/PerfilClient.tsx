@@ -11,26 +11,18 @@ import {
   EyeOff,
   CheckCircle2,
 } from "lucide-react";
-type PerfilUser = {
-  id?: string;
-  name?: string | null;
-  nome?: string | null;
-  email?: string | null;
-  nip?: string | null;
-  role?: string | null;
-};
-interface PerfilClientProps {
-  user: PerfilUser;
-}
-export default function PerfilClient({ user }: PerfilClientProps) {
-  const [nome, setNome] = useState(user.nome ?? user.name ?? "");
-  const [email, setEmail] = useState(user.email ?? "");
-  useEffect(() => {
-    setNome(user.nome ?? user.name ?? "");
-    setEmail(user.email ?? "");
-  }, [user.nome, user.name, user.email]);
+import { useUser } from "@/contexts/UserContext";
 
-  const [nip] = useState(user.nip ?? "");
+export default function PerfilClient() {
+  const { user, updateUser } = useUser();
+  const [nome, setNome] = useState(user?.nome ?? user?.name ?? "");
+  const [email, setEmail] = useState(user?.email ?? "");
+  useEffect(() => {
+    setNome(user?.nome ?? user?.name ?? "");
+    setEmail(user?.email ?? "");
+  }, [user?.nome, user?.name, user?.email]);
+
+  const [nip] = useState(user?.nip ?? "");
   const [senhaAtual, setSenhaAtual] = useState("");
   const [novaSenha, setNovaSenha] = useState("");
   const [confirmarSenha, setConfirmarSenha] = useState("");
@@ -44,20 +36,36 @@ export default function PerfilClient({ user }: PerfilClientProps) {
 
   async function handleProfileSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
     setMensagem(null);
     setErro(null);
     setSalvandoPerfil(true);
+
     try {
       const response = await fetch("/api/usuario/perfil", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nome, email }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          nome,
+          email,
+        }),
       });
+
       const data = await response.json();
+
       if (!response.ok) {
         setErro(data.error || "Erro ao atualizar perfil.");
         return;
       }
+
+      // Atualiza o contexto global
+      updateUser({
+        nome,
+        email,
+      });
+
       setMensagem("Perfil atualizado com sucesso!");
     } catch {
       setErro("Erro inesperado ao atualizar perfil.");
@@ -147,19 +155,19 @@ export default function PerfilClient({ user }: PerfilClientProps) {
               <div>
                 <p className="text-xs text-slate-500"> Nome </p>
                 <p className="mt-1 text-sm font-medium">
-                  {user.nome ?? user.name ?? "Não informado"}
+                  {user?.nome ?? user?.name ?? "Não informado"}
                 </p>
               </div>
               <div>
                 <p className="text-xs text-slate-500"> E-mail </p>
                 <p className="mt-1 break-all text-sm font-medium">
-                  {user.email ?? "Não informado"}
+                  {user?.email ?? "Não informado"}
                 </p>
               </div>
               <div>
                 <p className="text-xs text-slate-500"> NIP </p>
                 <p className="mt-1 text-sm font-medium">
-                  {user.nip ?? "Não informado"}
+                  {user?.nip ?? "Não informado"}
                 </p>
               </div>
               <div>
@@ -167,7 +175,7 @@ export default function PerfilClient({ user }: PerfilClientProps) {
                 <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1.5">
                   <Shield size={14} />
                   <span className="text-xs font-semibold">
-                    {user.role ?? "Usuário"}
+                    {user?.role ?? "Usuário"}
                   </span>
                 </div>
               </div>

@@ -14,9 +14,7 @@ import {
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
-import { DashboardUser } from "@/types/dashboard";
 interface SidebarProps {
-  user: DashboardUser;
   isOpen: boolean;
   onClose: () => void;
 }

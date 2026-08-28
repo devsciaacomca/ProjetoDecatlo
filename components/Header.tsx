@@ -1,11 +1,10 @@
 "use client";
 
 import { Menu } from "lucide-react";
-import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { Session } from "next-auth";
+import { DashboardUser } from "@/types/dashboard";
 interface HeaderProps {
-  user: Session["user"];
+  user: DashboardUser;
   onMenuClick: () => void;
 }
 

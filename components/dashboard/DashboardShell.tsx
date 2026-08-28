@@ -5,15 +5,7 @@ import { useState } from "react";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import Footer from "@/components/Footer";
-
-interface DashboardUser {
-  id: string;
-  nome?: string | null;
-  name?: string | null;
-  email?: string | null;
-  nip?: string | null;
-  role?: string | null;
-}
+import { DashboardUser } from "@/types/dashboard";
 
 interface DashboardShellProps {
   children: React.ReactNode;

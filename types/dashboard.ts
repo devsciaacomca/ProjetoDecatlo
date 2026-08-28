@@ -19,3 +19,12 @@ export interface DashboardActivity {
   description: string;
   time: string;
 }
+
+export interface DashboardUser {
+  id: string;
+  nome?: string | null;
+  name?: string | null;
+  email?: string | null;
+  nip?: string | null;
+  role?: string | null;
+}

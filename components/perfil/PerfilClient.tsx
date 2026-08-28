@@ -29,6 +29,7 @@ export default function PerfilClient({ user }: PerfilClientProps) {
     setNome(user.nome ?? user.name ?? "");
     setEmail(user.email ?? "");
   }, [user.nome, user.name, user.email]);
+
   const [nip] = useState(user.nip ?? "");
   const [senhaAtual, setSenhaAtual] = useState("");
   const [novaSenha, setNovaSenha] = useState("");

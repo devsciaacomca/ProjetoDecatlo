@@ -3,15 +3,15 @@
 import { Menu } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-
+import { Session } from "next-auth";
 interface HeaderProps {
+  user: Session["user"];
   onMenuClick: () => void;
 }
 
-export default function Header({ onMenuClick }: HeaderProps) {
-  const { data: session } = useSession();
-  const nome = session?.user?.nome ?? "Usuário";
-  const role = session?.user?.role ?? "";
+export default function Header({ user, onMenuClick }: HeaderProps) {
+  const nome = user.nome ?? "Usuário";
+  const role = user.role ?? "";
   const inicial = nome.trim().charAt(0).toUpperCase() || "?";
 
   return (

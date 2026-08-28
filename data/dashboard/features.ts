@@ -37,7 +37,7 @@ export const dashboardFeatures: DashboardFeature[] = [
     action: "Acessar →",
   },
   {
-    href: "/dashboard/telao",
+    href: "/telao/123",
     icon: "▣",
     title: "Tela de apresentação",
     description: "Abrir a tela que será utilizada no telão da apresentação.",

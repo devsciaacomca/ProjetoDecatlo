@@ -64,6 +64,7 @@ export default function PerfilClient({ user }: PerfilClientProps) {
       setSalvandoPerfil(false);
     }
   }
+
   async function handlePasswordSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMensagem(null);

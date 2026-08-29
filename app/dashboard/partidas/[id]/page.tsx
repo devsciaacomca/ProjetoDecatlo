@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
+import { notFound, useParams } from "next/navigation";
+
 import {
   ArrowLeft,
   Gamepad2,
@@ -11,37 +12,42 @@ import {
   Clock3,
   ListChecks,
   Users,
+  Trophy,
 } from "lucide-react";
 
-import { PartidaStatus } from "@/types/partidas";
-import { statusConfig } from "@/data/partidas/partidas";
-export default function PartidaPage() {
-  // Temporário.
-  // Mudar para buscar pelo ID dos dados partidas.
-  const partida = {
-    id: "123",
-    nome: "Decatlo 2026",
-    equipe1: "Alfa 1",
-    equipe2: "Alfa 2",
-    status: "pronta" as PartidaStatus,
-    totalPerguntas: 20,
-    perguntaAtual: 0,
-    tempoResposta: 30,
-    tipoPergunta: "Objetiva",
-  };
+import {
+  partidas,
+  statusConfig,
+} from "@/data/partidas/partidas";
 
-  const status = statusConfig[partida.status];
+export default function PartidaPage() {
+  const params =
+    useParams<{ id: string }>();
+
+  const partida = partidas.find(
+    (item) =>
+      item.id === params.id,
+  );
+
+  if (!partida) {
+    notFound();
+  }
+
+  const status =
+    statusConfig[partida.status];
 
   return (
     <main className="flex-1 p-4 sm:p-6 lg:p-8">
       <div className="mx-auto w-full max-w-6xl">
-        {/* Cabeçalho */}
+        {/* CABEÇALHO */}
+
         <div className="mb-6">
           <Link
             href="/dashboard/partidas"
             className="mb-4 inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900"
           >
             <ArrowLeft size={16} />
+
             Voltar para partidas
           </Link>
 
@@ -70,6 +76,7 @@ export default function PartidaPage() {
                 className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"
               >
                 <Gamepad2 size={17} />
+
                 Controle
               </Link>
 
@@ -79,16 +86,24 @@ export default function PartidaPage() {
                 className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
               >
                 <Monitor size={17} />
+
                 Abrir telão
               </Link>
             </div>
           </div>
         </div>
 
-        {/* Placar */}
+        {/* PLACAR */}
+
         <section className="rounded-xl border border-slate-200 bg-white shadow-sm">
           <div className="border-b border-slate-200 px-6 py-5">
-            <h2 className="font-semibold">Placar</h2>
+            <div className="flex items-center gap-2">
+              <Trophy size={18} />
+
+              <h2 className="font-semibold">
+                Placar
+              </h2>
+            </div>
 
             <p className="mt-1 text-sm text-slate-500">
               Pontuação atual das equipes.
@@ -97,35 +112,51 @@ export default function PartidaPage() {
 
           <div className="grid divide-y sm:grid-cols-2 sm:divide-x sm:divide-y-0">
             <div className="p-8 text-center">
-              <p className="text-sm text-slate-500">{partida.equipe1}</p>
+              <p className="text-sm text-slate-500">
+                {partida.equipe1}
+              </p>
 
-              <p className="mt-2 text-5xl font-bold">0</p>
+              <p className="mt-2 text-5xl font-bold">
+                0
+              </p>
 
-              <p className="mt-2 text-xs text-slate-400">pontos</p>
+              <p className="mt-2 text-xs text-slate-400">
+                pontos
+              </p>
             </div>
 
             <div className="p-8 text-center">
-              <p className="text-sm text-slate-500">{partida.equipe2}</p>
+              <p className="text-sm text-slate-500">
+                {partida.equipe2}
+              </p>
 
-              <p className="mt-2 text-5xl font-bold">0</p>
+              <p className="mt-2 text-5xl font-bold">
+                0
+              </p>
 
-              <p className="mt-2 text-xs text-slate-400">pontos</p>
+              <p className="mt-2 text-xs text-slate-400">
+                pontos
+              </p>
             </div>
           </div>
         </section>
 
-        {/* Informações */}
+        {/* INFORMAÇÕES */}
+
         <section className="mt-6">
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="flex items-center gap-2 text-slate-500">
                 <Users size={18} />
 
-                <span className="text-sm">Equipes</span>
+                <span className="text-sm">
+                  Equipes
+                </span>
               </div>
 
               <p className="mt-3 font-semibold">
-                {partida.equipe1} × {partida.equipe2}
+                {partida.equipe1} ×{" "}
+                {partida.equipe2}
               </p>
             </div>
 
@@ -133,11 +164,14 @@ export default function PartidaPage() {
               <div className="flex items-center gap-2 text-slate-500">
                 <ListChecks size={18} />
 
-                <span className="text-sm">Perguntas</span>
+                <span className="text-sm">
+                  Perguntas
+                </span>
               </div>
 
               <p className="mt-3 font-semibold">
-                {partida.perguntaAtual} / {partida.totalPerguntas}
+                {partida.perguntaAtual} /{" "}
+                {partida.perguntas}
               </p>
             </div>
 
@@ -145,11 +179,13 @@ export default function PartidaPage() {
               <div className="flex items-center gap-2 text-slate-500">
                 <Clock3 size={18} />
 
-                <span className="text-sm">Tempo</span>
+                <span className="text-sm">
+                  Tempo
+                </span>
               </div>
 
               <p className="mt-3 font-semibold">
-                {partida.tempoResposta} segundos
+                30 segundos
               </p>
             </div>
 
@@ -157,18 +193,25 @@ export default function PartidaPage() {
               <div className="flex items-center gap-2 text-slate-500">
                 <Settings size={18} />
 
-                <span className="text-sm">Tipo</span>
+                <span className="text-sm">
+                  Tipo
+                </span>
               </div>
 
-              <p className="mt-3 font-semibold">{partida.tipoPergunta}</p>
+              <p className="mt-3 font-semibold">
+                Objetiva / Aberta
+              </p>
             </div>
           </div>
         </section>
 
-        {/* Ações */}
+        {/* AÇÕES */}
+
         <section className="mt-6 rounded-xl border border-slate-200 bg-white shadow-sm">
           <div className="border-b border-slate-200 px-6 py-5">
-            <h2 className="font-semibold">Ações da partida</h2>
+            <h2 className="font-semibold">
+              Ações da partida
+            </h2>
 
             <p className="mt-1 text-sm text-slate-500">
               Acesse as ferramentas necessárias para executar a partida.
@@ -186,7 +229,9 @@ export default function PartidaPage() {
                 </div>
 
                 <div>
-                  <h3 className="font-semibold">Controle da partida</h3>
+                  <h3 className="font-semibold">
+                    Controle da partida
+                  </h3>
 
                   <p className="mt-1 text-sm text-slate-500">
                     Controle perguntas, tempo, respostas e pontuação.
@@ -206,7 +251,9 @@ export default function PartidaPage() {
                 </div>
 
                 <div>
-                  <h3 className="font-semibold">Telão</h3>
+                  <h3 className="font-semibold">
+                    Telão
+                  </h3>
 
                   <p className="mt-1 text-sm text-slate-500">
                     Abra a apresentação pública da partida.
@@ -217,16 +264,19 @@ export default function PartidaPage() {
           </div>
         </section>
 
-        {/* Iniciar */}
-        {partida.status === "pronta" && (
+        {/* INICIAR */}
+
+        {partida.status ===
+          "pronta" && (
           <section className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="font-semibold">Partida pronta</h2>
+                <h2 className="font-semibold">
+                  Partida pronta
+                </h2>
 
                 <p className="mt-1 text-sm text-slate-500">
-                  Todas as configurações foram definidas. Quando estiver pronto,
-                  inicie a partida.
+                  Todas as configurações foram definidas.
                 </p>
               </div>
 
@@ -235,6 +285,7 @@ export default function PartidaPage() {
                 className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800"
               >
                 <Play size={18} />
+
                 Iniciar partida
               </Link>
             </div>

@@ -1,5 +1,13 @@
-import { Partida, PartidaStatus } from "@/types/partidas";
-import { PlayCircle, CheckCircle2, Clock3 } from "lucide-react";
+import {
+  Partida,
+  PartidaStatus,
+} from "@/types/partidas";
+
+import {
+  PlayCircle,
+  CheckCircle2,
+  Clock3,
+} from "lucide-react";
 
 export const partidas: Partida[] = [
   {
@@ -54,22 +62,29 @@ export const statusConfig: Record<
 > = {
   configuracao: {
     label: "Em configuração",
-    className: "bg-slate-100 text-slate-700",
+    className:
+      "bg-slate-100 text-slate-700",
     icon: Clock3,
   },
+
   pronta: {
     label: "Pronta",
-    className: "bg-amber-100 text-amber-700",
+    className:
+      "bg-amber-100 text-amber-700",
     icon: Clock3,
   },
+
   em_andamento: {
     label: "Em andamento",
-    className: "bg-green-100 text-green-700",
+    className:
+      "bg-green-100 text-green-700",
     icon: PlayCircle,
   },
+
   finalizada: {
     label: "Finalizada",
-    className: "bg-blue-100 text-blue-700",
+    className:
+      "bg-blue-100 text-blue-700",
     icon: CheckCircle2,
   },
 };

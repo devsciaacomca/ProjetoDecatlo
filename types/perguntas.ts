@@ -1,14 +1,18 @@
-export type TipoPergunta = "objetiva" | "aberta";
-export interface Alternativa {
+
+export type PerguntaTipo = "objetiva" | "aberta";
+
+export type Alternativa = {
   id: number;
   texto: string;
-}
-export interface Pergunta {
+};
+
+export type Pergunta = {
   id: number;
   assunto: string;
-  tipo: TipoPergunta;
+  tipo: PerguntaTipo;
   enunciado: string;
   alternativas?: Alternativa[];
-  respostaCorreta?: string;
+  respostaCorreta: string;
+  explicacao: string;
   criadaEm: string;
-}
+};

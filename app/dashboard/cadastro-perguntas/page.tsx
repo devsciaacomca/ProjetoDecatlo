@@ -1,11 +1,11 @@
 "use client";
 import { useState } from "react";
 import { perguntas } from "@/data/perguntas/perguntas";
-import type { TipoPergunta } from "@/types/perguntas";
+import type { PerguntaTipo } from "@/types/perguntas";
 type AlternativaForm = { id: number; texto: string };
 export default function CadastroPerguntasPage() {
   const [assunto, setAssunto] = useState("");
-  const [tipo, setTipo] = useState<TipoPergunta>("objetiva");
+  const [tipo, setTipo] = useState<PerguntaTipo>("objetiva");
   const [enunciado, setEnunciado] = useState("");
   const [explicacao, setExplicacao] = useState("");
   const [alternativas, setAlternativas] = useState<AlternativaForm[]>([
@@ -41,7 +41,7 @@ export default function CadastroPerguntasPage() {
       ),
     );
   }
-  function alterarTipo(novoTipo: TipoPergunta) {
+  function alterarTipo(novoTipo: PerguntaTipo) {
     setTipo(novoTipo);
     if (novoTipo === "aberta") {
       setRespostaCorreta(null);

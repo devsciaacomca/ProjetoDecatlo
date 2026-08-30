@@ -19,43 +19,60 @@ export async function GET(request: NextRequest) {
     }
 
     const url = new URL(request.url);
-    const termo = url.searchParams.get("termo")?.toLowerCase() || "";
+    const termo = url.searchParams.get("search")?.toLowerCase() || url.searchParams.get("termo")?.toLowerCase() || "";
+    const page = parseInt(url.searchParams.get("page") || "1");
+    const limit = parseInt(url.searchParams.get("limit") || "10");
+    const skip = (page - 1) * limit;
 
-    const usuarios = await prisma.user.findMany({
-      where: termo
-        ? {
-            OR: [
-              { nome: { contains: termo, mode: "insensitive" } },
-              { email: { contains: termo, mode: "insensitive" } },
-              { nip: { contains: termo } },
-            ],
-          }
-        : undefined,
-      select: {
-        id: true,
-        nome: true,
-        email: true,
-        nip: true,
-        idade: true,
-        roleId: true,
-        role: {
-          select: {
-            nome: true,
-          },
+    const where = termo
+      ? {
+          OR: [
+            { nome: { contains: termo, mode: "insensitive" } as const },
+            { email: { contains: termo, mode: "insensitive" } as const },
+            { nip: { contains: termo } },
+          ],
+        }
+      : {};
+
+    const [usuarios, totalCount] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        skip,
+        take: limit,
+        select: {
+          id: true,
+          nome: true,
+          email: true,
+          nip: true,
+          idade: true,
+          roleId: true,
+          role: { select: { nome: true } },
+          createdAt: true,
         },
-        createdAt: true,
-      },
-      orderBy: { id: "asc" },
-    });
+        orderBy: { id: "asc" },
+      }),
+      prisma.user.count({ where }),
+    ]);
 
-    // Adaptando para o formato que o frontend espera no momento, como "ativo" que pode ser derivado da role ou uma coluna nova (por enquanto simulamos ativo=true)
-    const usuariosFormatados = usuarios.map(u => ({
+    const usuariosFormatados = usuarios.map((u) => ({
       ...u,
       role: u.role.nome,
-      ativo: true, // TODO: caso adicione status de inativo no banco depois
+      ativo: true,
     }));
 
-    return successResponse(usuariosFormatados, "Usuários carregados com sucesso");
+    const totalPages = Math.ceil(totalCount / limit);
+
+    return Response.json({
+      success: true,
+      message: "Usuários carregados com sucesso",
+      data: usuariosFormatados,
+      meta: {
+        totalCount,
+        totalPages,
+        currentPage: page,
+        limit,
+      },
+    });
   } catch (error) {
     console.error("Erro ao buscar usuários:", error);
     return commonErrors.internalServerError();
@@ -91,7 +108,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { nome, email, nip, idade, senha, roleId } = validation.data;
+    const { nome, email, nip, idade, senha, role } = validation.data;
 
     // Verificar se já existe usuário com mesmo NIP ou E-mail
     const usuarioExistente = await prisma.user.findFirst({
@@ -106,7 +123,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar se a role existe
-    const roleExistente = await prisma.role.findUnique({ where: { id: roleId } });
+    const roleExistente = await prisma.role.findUnique({ where: { nome: role } });
     if (!roleExistente) {
       return errorResponse("O nível de acesso (role) selecionado não existe", 400);
     }
@@ -123,7 +140,7 @@ export async function POST(request: NextRequest) {
         nip,
         idade,
         senhaHash,
-        roleId,
+        roleId: roleExistente.id,
       },
       select: {
         id: true,

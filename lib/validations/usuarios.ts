@@ -6,7 +6,7 @@ export const createUserSchema = z.object({
   nip: z.string().length(8, "O NIP deve ter exatamente 8 dígitos"),
   idade: z.number().int().min(1, "A idade deve ser um número válido").optional().default(18),
   senha: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
-  roleId: z.number().int().positive("Nível de acesso inválido"),
+  role: z.string().min(1, "Nível de acesso inválido"),
 });
 
 export const updateUserSchema = z.object({
@@ -15,7 +15,7 @@ export const updateUserSchema = z.object({
   nip: z.string().length(8, "O NIP deve ter exatamente 8 dígitos").optional(),
   idade: z.number().int().min(1, "A idade deve ser um número válido").optional(),
   senha: z.string().min(6, "A senha deve ter pelo menos 6 caracteres").optional(),
-  roleId: z.number().int().positive("Nível de acesso inválido").optional(),
+  role: z.string().min(1, "Nível de acesso inválido").optional(),
 });
 
 export const updateProfileSchema = z.object({

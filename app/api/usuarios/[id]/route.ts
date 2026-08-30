@@ -81,7 +81,13 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     // Um usuário comum só altera e-mail pelo /api/usuario/perfil
     if (hasPermission(session, "usuarios.gerenciar")) {
       if (dadosAtualizacao.email) updateData.email = dadosAtualizacao.email;
-      if (dadosAtualizacao.roleId) updateData.roleId = dadosAtualizacao.roleId;
+      if (dadosAtualizacao.role) {
+        const roleExistente = await prisma.role.findUnique({ where: { nome: dadosAtualizacao.role } });
+        if (!roleExistente) {
+          return errorResponse("O nível de acesso (role) selecionado não existe", 400);
+        }
+        updateData.roleId = roleExistente.id;
+      }
     }
 
     // Se forneceu uma senha nova na atualização do CRUD

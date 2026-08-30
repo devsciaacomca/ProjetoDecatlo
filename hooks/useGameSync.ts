@@ -116,6 +116,7 @@ export function useGameSync({
   onAction,
   onStateReceived,
 }: UseGameSyncProps) {
+  // TODO: Quando migrar para WebSockets, usar: const socketRef = useRef<Socket | null>(null);
   const channelRef =
     useRef<BroadcastChannel | null>(null);
 
@@ -136,6 +137,7 @@ export function useGameSync({
         action,
       };
 
+      // TODO (WebSocket): socketRef.current?.emit("sync-game-state", message);
       channelRef.current?.postMessage(
         message,
       );
@@ -161,6 +163,12 @@ export function useGameSync({
       );
 
     channelRef.current = channel;
+
+    // TODO (WebSocket):
+    // const socket = io(); // ou io("http://localhost:3000")
+    // socketRef.current = socket;
+    // socket.on("connect", () => setConectado(true));
+    // socket.on("game-state-updated", handleMessage);
 
     setConectado(true);
 

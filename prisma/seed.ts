@@ -36,14 +36,14 @@ async function main() {
 
   const apresentadorRole = await prisma.role.upsert({
     where: { nome: "Apresentador" },
-    update: { descricao: "Pode apresentar o telão" },
-    create: { nome: "Apresentador", descricao: "Pode apresentar o telão" },
+    update: { descricao: "Pode controlar a partida" },
+    create: { nome: "Apresentador", descricao: "Pode controlar a partida" },
   });
 
   const cadastradorRole = await prisma.role.upsert({
     where: { nome: "Cadastrador" },
-    update: { descricao: "Pode gerenciar perguntas e usuários" },
-    create: { nome: "Cadastrador", descricao: "Pode gerenciar perguntas e usuários" },
+    update: { descricao: "Pode gerenciar perguntas" },
+    create: { nome: "Cadastrador", descricao: "Pode gerenciar perguntas" },
   });
 
   const usuarioRole = await prisma.role.upsert({
@@ -64,6 +64,62 @@ async function main() {
         update: {},
         create: {
           roleId: adminRole.id,
+          permissionId: permission.id,
+        },
+      }),
+    ),
+  );
+
+  const cadastradorPerms = permissions.filter(p => p.chave === "dashboard.acessar" || p.chave === "perguntas.gerenciar");
+  
+  // Remove permissões antigas do cadastrador (ex: usuarios.gerenciar) se houver
+  await prisma.rolePermission.deleteMany({
+    where: {
+      roleId: cadastradorRole.id,
+      permissionId: { notIn: cadastradorPerms.map(p => p.id) }
+    }
+  });
+
+  await Promise.all(
+    cadastradorPerms.map((permission) =>
+      prisma.rolePermission.upsert({
+        where: {
+          roleId_permissionId: {
+            roleId: cadastradorRole.id,
+            permissionId: permission.id,
+          },
+        },
+        update: {},
+        create: {
+          roleId: cadastradorRole.id,
+          permissionId: permission.id,
+        },
+      }),
+    ),
+  );
+
+  // Permissões do Apresentador
+  const apresentadorPerms = permissions.filter(p => p.chave === "dashboard.acessar" || p.chave === "jogo.gerenciar" || p.chave === "telao.abrir");
+  
+  await prisma.rolePermission.deleteMany({
+    where: {
+      roleId: apresentadorRole.id,
+      permissionId: { notIn: apresentadorPerms.map(p => p.id) }
+    }
+  });
+
+  await Promise.all(
+    apresentadorPerms.map((permission) =>
+      prisma.rolePermission.upsert({
+        where: {
+          roleId_permissionId: {
+            roleId: apresentadorRole.id,
+            permissionId: permission.id,
+          },
+        },
+        update: {},
+        create: {
+          roleId: apresentadorRole.id,
           permissionId: permission.id,
         },
       }),

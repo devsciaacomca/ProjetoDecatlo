@@ -51,5 +51,37 @@ model RolePermission {
   permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
 
   @@id([roleId, permissionId])
-  @@index([permissionId])
+}
+
+model Pergunta {
+  id              Int      @id @default(autoincrement())
+  assunto         String
+  tipo            String // 'objetiva' ou 'aberta'
+  enunciado       String   @db.Text
+  respostaCorreta String
+  explicacao      String   @db.Text
+  criadaEm        DateTime @default(now())
+
+  alternativas Alternativa[]
+}
+
+model Alternativa {
+  id         Int      @id @default(autoincrement())
+  texto      String
+  perguntaId Int
+  pergunta   Pergunta @relation(fields: [perguntaId], references: [id], onDelete: Cascade)
+}
+
+model Partida {
+  id               String   @id @default(uuid())
+  nome             String
+  equipe1          String
+  equipe2          String
+  status           String // 'configuracao', 'pronta', 'em_andamento', 'finalizada'
+  perguntas        Int
+  perguntaAtual    Int
+  pontuacaoEquipeA Int      @default(0)
+  pontuacaoEquipeB Int      @default(0)
+  data             DateTime
+  criadaEm         DateTime @default(now())
 }

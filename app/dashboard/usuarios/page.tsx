@@ -26,12 +26,7 @@ const roles: Role[] = [
   "Cadastrador",
   "Usuário",
 ];
-const roleToId: Record<Role, number> = {
-  Administrador: 1,
-  Apresentador: 2,
-  Cadastrador: 3,
-  Usuário: 4,
-};
+
 const USUARIOS_POR_PAGINA = 10;
 const formularioInicial = {
   nome: "",
@@ -44,6 +39,8 @@ const formularioInicial = {
 export default function UsuariosPage() {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [busca, setBusca] = useState("");
+  const [totalUsuarios, setTotalUsuarios] = useState(0);
+  const [totalPaginas, setTotalPaginas] = useState(1);
   const [carregando, setCarregando] = useState(true);
   const [modalAberto, setModalAberto] = useState(false);
   const [usuarioEditando, setUsuarioEditando] = useState<Usuario | null>(null);
@@ -52,54 +49,48 @@ export default function UsuariosPage() {
   const [excluindoId, setExcluindoId] = useState<number | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [paginaAtual, setPaginaAtual] = useState(1);
-  /* * ============================================================ * CARREGAR USUÁRIOS * ============================================================ */ const carregarUsuarios =
-    useCallback(async () => {
-      try {
-        setCarregando(true);
-        setErro(null);
-        const response = await fetch("/api/usuarios", {
-          method: "GET",
-          cache: "no-store",
-        });
-        const data = await response.json();
-        if (!response.ok || !data.success) {
-          throw new Error(
-            data.error || "Não foi possível carregar os usuários.",
-          );
-        }
-        setUsuarios(data.data);
-      } catch (error) {
-        console.error(error);
-        setErro(
-          error instanceof Error ? error.message : "Erro ao carregar usuários.",
-        );
-      } finally {
-        setCarregando(false);
+  /* * ============================================================ * CARREGAR USUÁRIOS * ============================================================ */
+  const carregarUsuarios = useCallback(async () => {
+    try {
+      setCarregando(true);
+      setErro(null);
+      const query = new URLSearchParams({
+        page: paginaAtual.toString(),
+        limit: USUARIOS_POR_PAGINA.toString(),
+        ...(busca ? { search: busca } : {}),
+      });
+
+      const response = await fetch(`/api/usuarios?${query.toString()}`, {
+        method: "GET",
+        cache: "no-store",
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || "Não foi possível carregar os usuários.");
       }
-    }, []);
-  useEffect(() => {
-    carregarUsuarios();
-  }, [carregarUsuarios]);
-  /* * ============================================================ * FILTRO * ============================================================ */ const usuariosFiltrados =
-    useMemo(() => {
-      const termo = busca.toLowerCase().trim();
-      if (!termo) {
-        return usuarios;
+      setUsuarios(data.data);
+      if (data.meta) {
+        setTotalPaginas(data.meta.totalPages || 1);
+        setTotalUsuarios(data.meta.totalCount || 0);
       }
-      return usuarios.filter(
-        (usuario) =>
-          usuario.nome.toLowerCase().includes(termo) ||
-          usuario.email.toLowerCase().includes(termo) ||
-          usuario.nip.toLowerCase().includes(termo),
+    } catch (error) {
+      console.error(error);
+      setErro(
+        error instanceof Error ? error.message : "Erro ao carregar usuários.",
       );
-    }, [usuarios, busca]);
-  /* * ============================================================ * PAGINAÇÃO * ============================================================ */ const totalPaginas =
-    Math.max(1, Math.ceil(usuariosFiltrados.length / USUARIOS_POR_PAGINA));
-  const usuariosPaginados = useMemo(() => {
-    const inicio = (paginaAtual - 1) * USUARIOS_POR_PAGINA;
-    const fim = inicio + USUARIOS_POR_PAGINA;
-    return usuariosFiltrados.slice(inicio, fim);
-  }, [usuariosFiltrados, paginaAtual]);
+    } finally {
+      setCarregando(false);
+    }
+  }, [paginaAtual, busca]);
+
+  // Debounce para a busca e recarregamento automático
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      carregarUsuarios();
+    }, 300);
+    return () => clearTimeout(timeoutId);
+  }, [carregarUsuarios]);
+
   /* * Sempre que a pesquisa mudar, volta para a primeira página. */ useEffect(() => {
     setPaginaAtual(1);
   }, [busca]);
@@ -141,6 +132,10 @@ export default function UsuariosPage() {
       setErro("Preencha nome, e-mail e NIP.");
       return;
     }
+    if (form.nip.trim().length !== 8) {
+      setErro("O NIP deve ter exatamente 8 dígitos.");
+      return;
+    }
     if (!usuarioEditando && !form.senha.trim()) {
       setErro("Informe uma senha para o novo usuário.");
       return;
@@ -149,7 +144,7 @@ export default function UsuariosPage() {
       nome: form.nome.trim(),
       email: form.email.trim(),
       nip: form.nip.trim(),
-      roleId: roleToId[form.role],
+      role: form.role,
       ativo: form.ativo,
       ...(form.senha.trim() ? { senha: form.senha } : {}),
     };
@@ -248,7 +243,7 @@ export default function UsuariosPage() {
           nome: usuario.nome,
           email: usuario.email,
           nip: usuario.nip,
-          roleId: roleToId[usuario.role],
+          role: usuario.role,
           ativo: novoStatus,
         }),
       });
@@ -317,7 +312,7 @@ export default function UsuariosPage() {
                     {carregando ? (
                       <span className="inline-block h-7 w-12 animate-pulse rounded bg-slate-200" />
                     ) : (
-                      usuarios.length
+                      totalUsuarios
                     )}
                   </p>
                 </div>
@@ -437,7 +432,7 @@ export default function UsuariosPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {usuariosPaginados.map((usuario) => (
+                      {usuarios.map((usuario) => (
                         <tr
                           key={usuario.id}
                           className="transition hover:bg-slate-50"
@@ -501,7 +496,7 @@ export default function UsuariosPage() {
                     </tbody>
                   </table>
                   {/* ================================================== VAZIO ================================================== */}
-                  {usuariosFiltrados.length === 0 && (
+                  {usuarios.length === 0 && (
                     <div className="px-6 py-12 text-center">
                       <Users size={32} className="mx-auto text-slate-300" />
                       <p className="mt-3 text-sm font-medium">
@@ -516,7 +511,7 @@ export default function UsuariosPage() {
                   )}
                 </div>
                 {/* ================================================== PAGINAÇÃO ================================================== */}
-                {usuariosFiltrados.length > 0 && (
+                {usuarios.length > 0 && (
                   <div className="flex flex-col gap-4 border-t border-slate-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                     <p className="text-sm text-slate-500">
                       Mostrando {""}
@@ -527,12 +522,12 @@ export default function UsuariosPage() {
                       <span className="font-medium text-slate-700">
                         {Math.min(
                           paginaAtual * USUARIOS_POR_PAGINA,
-                          usuariosFiltrados.length,
+                          totalUsuarios,
                         )}
                       </span>
                       {""} de {""}
                       <span className="font-medium text-slate-700">
-                        {usuariosFiltrados.length}
+                        {totalUsuarios}
                       </span>
                       {""} usuários
                     </p>
@@ -635,10 +630,12 @@ export default function UsuariosPage() {
                     type="text"
                     value={form.nip}
                     disabled={!!usuarioEditando || salvando}
-                    onChange={(event) =>
-                      setForm({ ...form, nip: event.target.value })
-                    }
-                    placeholder="Número de identificação"
+                    maxLength={8}
+                    onChange={(event) => {
+                      const apenasNumeros = event.target.value.replace(/\D/g, "").slice(0, 8);
+                      setForm({ ...form, nip: apenasNumeros });
+                    }}
+                    placeholder="Ex: 00000000"
                     className={`w-full rounded-lg border px-4 py-3 text-sm outline-none focus:ring-2 ${usuarioEditando ? "cursor-not-allowed border-slate-200 bg-slate-50 text-slate-500" : "border-slate-300 bg-white focus:border-slate-700 focus:ring-slate-200"}`}
                   />
                 </div>

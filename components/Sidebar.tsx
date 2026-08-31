@@ -14,11 +14,11 @@ import {
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
+import { useUser } from "@/contexts/UserContext";
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
 }
-
 const menuSections = [
   {
     title: "Menu principal",
@@ -27,9 +27,11 @@ const menuSections = [
         href: "/dashboard",
         label: "Visão geral",
         icon: LayoutDashboard,
+        permission: "dashboard.acessar",
       },
     ],
   },
+
   {
     title: "Partidas",
     items: [
@@ -37,19 +39,23 @@ const menuSections = [
         href: "/dashboard/partidas/nova",
         label: "Nova partida",
         icon: PlusCircle,
+        permission: "jogo.configurar",
       },
       {
         href: "/dashboard/partidas",
         label: "Partidas",
         icon: List,
+        permission: "jogo.configurar",
       },
       {
-        href: "/dashboard/partidas/em-andamento",
+        href: "/dashboard/partidas/emandamento",
         label: "Partida em andamento",
         icon: PlayCircle,
+        permission: "jogo.gerenciar",
       },
     ],
   },
+
   {
     title: "Banco de perguntas",
     items: [
@@ -57,9 +63,11 @@ const menuSections = [
         href: "/dashboard/gerenciamento-perguntas",
         label: "Perguntas",
         icon: ClipboardList,
+        permission: "perguntas.gerenciar",
       },
     ],
   },
+
   {
     title: "Administração",
     items: [
@@ -67,17 +75,34 @@ const menuSections = [
         href: "/dashboard/usuarios",
         label: "Usuários",
         icon: Users,
+        permission: "usuarios.gerenciar",
       },
       {
         href: "/dashboard/auditoria",
         label: "Auditoria",
         icon: History,
+        permission: "auditoria.visualizar",
       },
     ],
   },
-];
+] satisfies {
+  title: string;
+  items: {
+    href: string;
+    label: string;
+    icon: typeof LayoutDashboard;
+    permission: string;
+  }[];
+}[];
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
+  const { user } = useUser();
+
+  if (!user) {
+    return null;
+  }
+
+  const permissions = user.permissions ?? [];
   return (
     <>
       {isOpen && (
@@ -116,48 +141,60 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         </div>
 
         <nav className="flex-1 overflow-y-auto px-4 py-6">
-          {menuSections.map((section) => (
-            <div key={section.title} className="mb-7">
+          {menuSections.map((section) => {
+            const visibleItems = section.items.filter((item) =>
+              permissions.includes(item.permission),
+            );
+
+            if (visibleItems.length === 0) {
+              return null;
+            }
+
+            return (
+              <div key={section.title} className="mb-7">
+                <p className="mb-3 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  {section.title}
+                </p>
+
+                <div className="space-y-1">
+                  {visibleItems.map((item) => {
+                    const Icon = item.icon;
+
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={onClose}
+                        className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium text-slate-300 transition hover:bg-slate-800 hover:text-white"
+                      >
+                        <Icon size={19} strokeWidth={1.8} />
+
+                        <span>{item.label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+
+          {permissions.includes("telao.abrir") && (
+            <div className="border-t border-slate-800 pt-6">
               <p className="mb-3 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                {section.title}
+                Apresentação
               </p>
 
-              <div className="space-y-1">
-                {section.items.map((item) => {
-                  const Icon = item.icon;
+              <Link
+                href="/telao"
+                target="_blank"
+                className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium text-slate-300 transition hover:bg-slate-800 hover:text-white"
+              >
+                <Monitor size={19} strokeWidth={1.8} />
 
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={onClose}
-                      className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium text-slate-300 transition hover:bg-slate-800 hover:text-white"
-                    >
-                      <Icon size={19} strokeWidth={1.8} />
-
-                      <span>{item.label}</span>
-                    </Link>
-                  );
-                })}
-              </div>
+                <span>Ver telão</span>
+              </Link>
             </div>
-          ))}
-
-          <div className="border-t border-slate-800 pt-6">
-            <p className="mb-3 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Apresentação
-            </p>
-
-            <Link
-              href="/telao/123"
-              target="_blank"
-              className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium text-slate-300 transition hover:bg-slate-800 hover:text-white"
-            >
-              <Monitor size={19} strokeWidth={1.8} />
-
-              <span>Ver telão</span>
-            </Link>
-          </div>
+          )}
         </nav>
 
         <div className="border-t border-slate-800 p-4">

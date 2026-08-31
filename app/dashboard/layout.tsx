@@ -1,5 +1,4 @@
-import { auth } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import { exigirPermissao } from "@/lib/autorizacao";
 
 import DashboardShell from "@/components/dashboard/DashboardShell";
 import { UserProvider } from "@/contexts/UserContext";
@@ -9,11 +8,7 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await auth();
-
-  if (!session?.user) {
-    redirect("/login");
-  }
+  const session = await exigirPermissao("dashboard.acessar");
 
   return (
     <UserProvider initialUser={session.user}>

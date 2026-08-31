@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Plus, Gamepad2, List, Monitor, ClipboardList } from "lucide-react";
+import { useUser } from "@/contexts/UserContext";
 
 // Data
 import { partidas } from "@/data/partidas/partidas";
@@ -9,9 +10,24 @@ import { dashboardActivities } from "@/data/dashboard/activities";
 import { dashboardStats } from "@/data/dashboard/stats";
 
 export default function DashboardPage() {
+  const { user } = useUser();
+
+  const permissions = user?.permissions ?? [];
+
+  const podeGerenciarPartidas = permissions.includes("jogo.configurar");
+
+  const podeControlarPartida = permissions.includes("jogo.gerenciar");
+
+  const podeGerenciarPerguntas = permissions.includes("perguntas.gerenciar");
+
+  const podeAbrirTelao = permissions.includes("telao.abrir");
+
+  const podeAuditoria = permissions.includes("auditoria.visualizar");
+
   const partidaEmAndamento = partidas.find(
     (partida) => partida.status === "em_andamento",
   );
+
   return (
     <main className="flex-1 p-4 sm:p-6 lg:p-8">
       <div className="mx-auto max-w-7xl">
@@ -26,32 +42,34 @@ export default function DashboardPage() {
         </div>
 
         {/* Ação principal */}
-        <section className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-            <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-slate-100">
-                <Gamepad2 size={24} />
+        {podeGerenciarPartidas && (
+          <section className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-slate-100">
+                  <Gamepad2 size={24} />
+                </div>
+
+                <div>
+                  <h2 className="text-lg font-semibold">Partidas</h2>
+
+                  <p className="mt-1 max-w-xl text-sm leading-6 text-slate-500">
+                    Crie e configure uma nova partida, defina as equipes,
+                    perguntas e regras antes de iniciar o jogo.
+                  </p>
+                </div>
               </div>
 
-              <div>
-                <h2 className="text-lg font-semibold">Partidas</h2>
-
-                <p className="mt-1 max-w-xl text-sm leading-6 text-slate-500">
-                  Crie e configure uma nova partida, defina as equipes,
-                  perguntas e regras antes de iniciar o jogo.
-                </p>
-              </div>
+              <Link
+                href="/dashboard/partidas/nova"
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+              >
+                <Plus size={18} />
+                Nova partida
+              </Link>
             </div>
-
-            <Link
-              href="/dashboard/partidas/nova"
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
-            >
-              <Plus size={18} />
-              Nova partida
-            </Link>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* Partida em andamento */}
         <section className="mt-6 rounded-xl border border-slate-200 bg-white shadow-sm">
@@ -83,22 +101,26 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="flex flex-col gap-2 sm:flex-row">
-                  <Link
-                    href={`/dashboard/partidas/${partidaEmAndamento.id}/controle`}
-                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
-                  >
-                    <Gamepad2 size={17} />
-                    Controlar partida
-                  </Link>
+                  {podeControlarPartida && (
+                    <Link
+                      href={`/dashboard/partidas/${partidaEmAndamento.id}/controle`}
+                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
+                    >
+                      <Gamepad2 size={17} />
+                      Controlar partida
+                    </Link>
+                  )}
 
-                  <Link
-                    href={`/telao/${partidaEmAndamento.id}`}
-                    target="_blank"
-                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-                  >
-                    <Monitor size={17} />
-                    Abrir telão
-                  </Link>
+                  {podeAbrirTelao && partidaEmAndamento && (
+                    <Link
+                      href={`/telao/${partidaEmAndamento.id}`}
+                      target="_blank"
+                      className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                    >
+                      <Monitor size={17} />
+                      Abrir telão
+                    </Link>
+                  )}
                 </div>
               </div>
             </div>
@@ -143,62 +165,67 @@ export default function DashboardPage() {
 
           <div className="grid gap-5 md:grid-cols-3">
             {/* Partidas */}
-            <Link
-              href="/dashboard/partidas"
-              className="group rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
-            >
-              <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-lg bg-slate-100">
-                <List size={21} />
-              </div>
+            {podeGerenciarPartidas && (
+              <Link
+                href="/dashboard/partidas"
+                className="group rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+              >
+                <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-lg bg-slate-100">
+                  <List size={21} />
+                </div>
 
-              <h3 className="font-semibold">Partidas</h3>
+                <h3 className="font-semibold">Partidas</h3>
 
-              <p className="mt-2 text-sm leading-6 text-slate-500">
-                Consulte partidas criadas, em andamento e finalizadas.
-              </p>
+                <p className="mt-2 text-sm leading-6 text-slate-500">
+                  Consulte partidas criadas, em andamento e finalizadas.
+                </p>
 
-              <p className="mt-5 text-sm font-semibold">Ver partidas →</p>
-            </Link>
+                <p className="mt-5 text-sm font-semibold">Ver partidas →</p>
+              </Link>
+            )}
 
             {/* Perguntas */}
-            <Link
-              href="/dashboard/gerenciamento-perguntas"
-              className="group rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
-            >
-              <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-lg bg-slate-100">
-                <ClipboardList size={21} />
-              </div>
+            {podeGerenciarPerguntas && (
+              <Link
+                href="/dashboard/gerenciamento-perguntas"
+                className="group rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+              >
+                <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-lg bg-slate-100">
+                  <ClipboardList size={21} />
+                </div>
 
-              <h3 className="font-semibold">Banco de perguntas</h3>
+                <h3 className="font-semibold">Banco de perguntas</h3>
 
-              <p className="mt-2 text-sm leading-6 text-slate-500">
-                Cadastre, consulte e gerencie as perguntas utilizadas nas
-                partidas.
-              </p>
+                <p className="mt-2 text-sm leading-6 text-slate-500">
+                  Cadastre, consulte e gerencie as perguntas utilizadas nas
+                  partidas.
+                </p>
 
-              <p className="mt-5 text-sm font-semibold">
-                Gerenciar perguntas →
-              </p>
-            </Link>
-
+                <p className="mt-5 text-sm font-semibold">
+                  Gerenciar perguntas →
+                </p>
+              </Link>
+            )}
             {/* Telão */}
-            <Link
-              href="/dashboard/partidas/em-andamento/telao"
-              target="_blank"
-              className="group rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
-            >
-              <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-lg bg-slate-100">
-                <Monitor size={21} />
-              </div>
+            {podeAbrirTelao && partidaEmAndamento && (
+              <Link
+                href={`/telao/${partidaEmAndamento.id}`}
+                target="_blank"
+                className="group rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+              >
+                <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-lg bg-slate-100">
+                  <Monitor size={21} />
+                </div>
 
-              <h3 className="font-semibold">Telão</h3>
+                <h3 className="font-semibold">Telão</h3>
 
-              <p className="mt-2 text-sm leading-6 text-slate-500">
-                Abra a apresentação da partida para exibição ao público.
-              </p>
+                <p className="mt-2 text-sm leading-6 text-slate-500">
+                  Abra a apresentação da partida para exibição ao público.
+                </p>
 
-              <p className="mt-5 text-sm font-semibold">Abrir telão →</p>
-            </Link>
+                <p className="mt-5 text-sm font-semibold">Abrir telão →</p>
+              </Link>
+            )}
           </div>
         </section>
 
@@ -223,36 +250,6 @@ export default function DashboardPage() {
                 <p className="mt-2 text-xs text-slate-400">
                   {stat.description}
                 </p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Atividade recente */}
-        <section className="mt-8 rounded-xl border border-slate-200 bg-white shadow-sm">
-          <div className="border-b border-slate-200 px-6 py-5">
-            <h2 className="font-semibold">Atividade recente</h2>
-
-            <p className="mt-1 text-sm text-slate-500">
-              Últimas ações realizadas no sistema.
-            </p>
-          </div>
-
-          <div className="divide-y divide-slate-100">
-            {dashboardActivities.map((activity) => (
-              <div
-                key={`${activity.title}-${activity.time}`}
-                className="flex items-center justify-between px-6 py-4"
-              >
-                <div>
-                  <p className="text-sm font-medium">{activity.title}</p>
-
-                  <p className="mt-1 text-xs text-slate-500">
-                    {activity.description}
-                  </p>
-                </div>
-
-                <span className="text-xs text-slate-400">{activity.time}</span>
               </div>
             ))}
           </div>

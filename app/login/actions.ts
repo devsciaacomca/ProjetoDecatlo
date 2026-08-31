@@ -2,11 +2,7 @@
 
 import { AuthError } from "next-auth";
 import { signIn } from "@/lib/auth";
-
-export type LoginState = {
-  error?: string;
-};
-
+export type LoginState = { error?: string };
 function destinoSeguro(callbackUrl: string) {
   if (!callbackUrl.startsWith("/")) {
     return "/dashboard";
@@ -25,7 +21,9 @@ export async function authenticate(
 ): Promise<LoginState> {
   const identifier = String(formData.get("identifier") ?? "").trim();
   const password = String(formData.get("password") ?? "");
-  const callbackUrl = destinoSeguro(String(formData.get("callbackUrl") ?? "/dashboard"));
+  const callbackUrl = destinoSeguro(
+    String(formData.get("callbackUrl") ?? "/dashboard"),
+  );
 
   if (!identifier || !password) {
     return { error: "NIP/e-mail e senha são obrigatórios." };

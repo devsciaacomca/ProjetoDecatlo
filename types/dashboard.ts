@@ -27,4 +27,5 @@ export interface DashboardUser {
   email?: string | null;
   nip?: string | null;
   role?: string | null;
+  permissions?: string[] | null;
 }

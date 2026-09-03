@@ -6,7 +6,6 @@ import { useUser } from "@/contexts/UserContext";
 
 // Data
 import { partidas } from "@/data/partidas/partidas";
-import { dashboardActivities } from "@/data/dashboard/activities";
 import { dashboardStats } from "@/data/dashboard/stats";
 
 export default function DashboardPage() {
@@ -21,8 +20,6 @@ export default function DashboardPage() {
   const podeGerenciarPerguntas = permissions.includes("perguntas.gerenciar");
 
   const podeAbrirTelao = permissions.includes("telao.abrir");
-
-  const podeAuditoria = permissions.includes("auditoria.visualizar");
 
   const partidaEmAndamento = partidas.find(
     (partida) => partida.status === "em_andamento",

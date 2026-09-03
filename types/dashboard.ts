@@ -4,22 +4,6 @@ export interface DashboardStat {
   description: string;
 }
 
-export interface DashboardFeature {
-  href: string;
-  icon: string;
-  title: string;
-  description: string;
-  action: string;
-  target?: string;
-}
-
-export interface DashboardActivity {
-  id: number;
-  title: string;
-  description: string;
-  time: string;
-}
-
 export interface DashboardUser {
   id: string;
   nome?: string | null;

@@ -1,17 +1,6 @@
-// services/api/usuarios.service.ts
-
 import { apiClient } from "./client";
 
-export type Role = "Administrador" | "Apresentador" | "Cadastrador" | "Usuário";
-
-export interface Usuario {
-  id: number;
-  nome: string;
-  email: string;
-  nip: string;
-  role: Role;
-  ativo: boolean;
-}
+import type { Role, Usuario } from "@/types/usuarios";
 
 export interface ListarUsuariosParams {
   page?: number;

@@ -1,32 +1,15 @@
-// services/api/perfil.service.ts
-
 import { apiClient } from "./client";
 
-export interface AtualizarPerfilPayload {
-  nome: string;
-  email: string;
-}
-
-export interface PerfilUsuario {
-  id: number;
-  nome: string;
-  email: string;
-  nip: string;
-  idade: number | null;
-  role: {
-    nome: string;
-  };
-}
+import type {
+  AlterarSenhaPayload,
+  AtualizarPerfilPayload,
+  PerfilUsuario,
+} from "@/types/perfil";
 
 export interface AtualizarPerfilResponse {
   success: boolean;
   message: string;
   data: PerfilUsuario;
-}
-
-export interface AlterarSenhaPayload {
-  senhaAtual: string;
-  novaSenha: string;
 }
 
 export interface AlterarSenhaResponse {

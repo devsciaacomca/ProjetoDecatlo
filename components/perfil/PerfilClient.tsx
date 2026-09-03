@@ -1,5 +1,6 @@
 "use client";
 import { FormEvent, useEffect, useState } from "react";
+import { atualizarPerfil, alterarSenha } from "@/services/api/perfil.service";
 import {
   User,
   Mail,
@@ -42,33 +43,25 @@ export default function PerfilClient() {
     setSalvandoPerfil(true);
 
     try {
-      const response = await fetch("/api/usuario/perfil", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          nome,
-          email,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setErro(data.error || "Erro ao atualizar perfil.");
-        return;
-      }
-
-      // Atualiza o contexto global
-      updateUser({
+      const response = await atualizarPerfil({
         nome,
         email,
       });
 
+      updateUser({
+        nome: response.data.nome,
+        email: response.data.email,
+      });
+
       setMensagem("Perfil atualizado com sucesso!");
-    } catch {
-      setErro("Erro inesperado ao atualizar perfil.");
+    } catch (error) {
+      console.error(error);
+
+      setErro(
+        error instanceof Error
+          ? error.message
+          : "Erro inesperado ao atualizar perfil.",
+      );
     } finally {
       setSalvandoPerfil(false);
     }
@@ -76,38 +69,46 @@ export default function PerfilClient() {
 
   async function handlePasswordSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
     setMensagem(null);
     setErro(null);
+
     if (!senhaAtual || !novaSenha || !confirmarSenha) {
       setErro("Preencha todos os campos de senha.");
       return;
     }
+
     if (novaSenha !== confirmarSenha) {
       setErro("A confirmação da nova senha não corresponde.");
       return;
     }
+
     if (novaSenha.length < 6) {
       setErro("A nova senha deve possuir pelo menos 6 caracteres.");
       return;
     }
+
     setSalvandoSenha(true);
+
     try {
-      const response = await fetch("/api/usuario/senha", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ senhaAtual, novaSenha }),
+      await alterarSenha({
+        senhaAtual,
+        novaSenha,
       });
-      const data = await response.json();
-      if (!response.ok) {
-        setErro(data.error || "Erro ao atualizar senha.");
-        return;
-      }
+
       setMensagem("Senha atualizada com sucesso!");
+
       setSenhaAtual("");
       setNovaSenha("");
       setConfirmarSenha("");
-    } catch {
-      setErro("Erro inesperado ao atualizar senha.");
+    } catch (error) {
+      console.error(error);
+
+      setErro(
+        error instanceof Error
+          ? error.message
+          : "Erro inesperado ao atualizar senha.",
+      );
     } finally {
       setSalvandoSenha(false);
     }

@@ -1,6 +1,16 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  listarUsuarios,
+  criarUsuario,
+  atualizarUsuario,
+  excluirUsuario as excluirUsuarioService,
+  type Role,
+  type Usuario,
+  type CriarUsuarioPayload,
+  type AtualizarUsuarioPayload,
+} from "@/services/api/usuarios.service";
+import {
   Search,
   Plus,
   Pencil,
@@ -11,15 +21,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-type Role = "Administrador" | "Apresentador" | "Cadastrador" | "Usuário";
-interface Usuario {
-  id: number;
-  nome: string;
-  email: string;
-  nip: string;
-  role: Role;
-  ativo: boolean;
-}
+
 const roles: Role[] = [
   "Administrador",
   "Apresentador",
@@ -54,27 +56,20 @@ export default function UsuariosPage() {
     try {
       setCarregando(true);
       setErro(null);
-      const query = new URLSearchParams({
-        page: paginaAtual.toString(),
-        limit: USUARIOS_POR_PAGINA.toString(),
-        ...(busca ? { search: busca } : {}),
+
+      const response = await listarUsuarios({
+        page: paginaAtual,
+        limit: USUARIOS_POR_PAGINA,
+        search: busca,
       });
 
-      const response = await fetch(`/api/usuarios?${query.toString()}`, {
-        method: "GET",
-        cache: "no-store",
-      });
-      const data = await response.json();
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || "Não foi possível carregar os usuários.");
-      }
-      setUsuarios(data.data);
-      if (data.meta) {
-        setTotalPaginas(data.meta.totalPages || 1);
-        setTotalUsuarios(data.meta.totalCount || 0);
-      }
+      setUsuarios(response.data);
+
+      setTotalPaginas(response.meta?.totalPages || 1);
+      setTotalUsuarios(response.meta?.totalCount || 0);
     } catch (error) {
       console.error(error);
+
       setErro(
         error instanceof Error ? error.message : "Erro ao carregar usuários.",
       );
@@ -151,51 +146,58 @@ export default function UsuariosPage() {
     try {
       setSalvando(true);
       setErro(null);
+
       if (usuarioEditando) {
-        const response = await fetch(`/api/usuarios/${usuarioEditando.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data.error || "Erro ao editar usuário.");
-        }
-        /* * Atualiza somente o usuário alterado. * Evita uma nova requisição desnecessária. */ setUsuarios(
-          (usuariosAtuais) =>
-            usuariosAtuais.map((usuario) =>
-              usuario.id === usuarioEditando.id
-                ? {
-                    ...usuario,
-                    nome: form.nome.trim(),
-                    email: form.email.trim(),
-                    nip: form.nip.trim(),
-                    role: form.role,
-                    ativo: form.ativo,
-                  }
-                : usuario,
-            ),
+        const payload: AtualizarUsuarioPayload = {
+          nome: form.nome.trim(),
+          email: form.email.trim(),
+          nip: form.nip.trim(),
+          role: form.role,
+          ativo: form.ativo,
+          ...(form.senha.trim() ? { senha: form.senha } : {}),
+        };
+
+        await atualizarUsuario(usuarioEditando.id, payload);
+
+        setUsuarios((usuariosAtuais) =>
+          usuariosAtuais.map((usuario) =>
+            usuario.id === usuarioEditando.id
+              ? {
+                  ...usuario,
+                  nome: form.nome.trim(),
+                  email: form.email.trim(),
+                  nip: form.nip.trim(),
+                  role: form.role,
+                  ativo: form.ativo,
+                }
+              : usuario,
+          ),
         );
       } else {
-        const response = await fetch("/api/usuarios", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data.error || "Erro ao criar usuário.");
-        }
-        /* * Caso a API retorne o usuário criado: */ if (data.data) {
-          setUsuarios((usuariosAtuais) => [data.data, ...usuariosAtuais]);
+        const payload: CriarUsuarioPayload = {
+          nome: form.nome.trim(),
+          email: form.email.trim(),
+          nip: form.nip.trim(),
+          role: form.role,
+          ativo: form.ativo,
+          senha: form.senha.trim(),
+        };
+
+        const response = await criarUsuario(payload);
+
+        if (response.data) {
+          setUsuarios((usuariosAtuais) => [response.data, ...usuariosAtuais]);
         } else {
-          /* * Fallback caso sua API não retorne o registro. */ await carregarUsuarios();
+          await carregarUsuarios();
         }
+
         setPaginaAtual(1);
       }
+
       fecharModal();
     } catch (error) {
       console.error(error);
+
       setErro(
         error instanceof Error ? error.message : "Erro ao salvar usuário.",
       );
@@ -207,23 +209,26 @@ export default function UsuariosPage() {
     id: number,
   ) {
     const usuario = usuarios.find((item) => item.id === id);
+
     if (!usuario) return;
+
     const confirmar = window.confirm(
       `Deseja realmente excluir o usuário "${usuario.nome}"?`,
     );
+
     if (!confirmar) return;
+
     try {
       setExcluindoId(id);
-      const response = await fetch(`/api/usuarios/${id}`, { method: "DELETE" });
-      const data = await response.json().catch(() => null);
-      if (!response.ok) {
-        throw new Error(data?.error || "Erro ao excluir usuário.");
-      }
+
+      await excluirUsuarioService(id);
+
       setUsuarios((usuariosAtuais) =>
         usuariosAtuais.filter((item) => item.id !== id),
       );
     } catch (error) {
       console.error(error);
+
       alert(
         error instanceof Error ? error.message : "Erro ao excluir usuário.",
       );
@@ -235,29 +240,29 @@ export default function UsuariosPage() {
     usuario: Usuario,
   ) {
     const novoStatus = !usuario.ativo;
+
     try {
-      const response = await fetch(`/api/usuarios/${usuario.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nome: usuario.nome,
-          email: usuario.email,
-          nip: usuario.nip,
-          role: usuario.role,
-          ativo: novoStatus,
-        }),
+      await atualizarUsuario(usuario.id, {
+        nome: usuario.nome,
+        email: usuario.email,
+        nip: usuario.nip,
+        role: usuario.role,
+        ativo: novoStatus,
       });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || "Erro ao alterar status.");
-      }
+
       setUsuarios((usuariosAtuais) =>
         usuariosAtuais.map((item) =>
-          item.id === usuario.id ? { ...item, ativo: novoStatus } : item,
+          item.id === usuario.id
+            ? {
+                ...item,
+                ativo: novoStatus,
+              }
+            : item,
         ),
       );
     } catch (error) {
       console.error(error);
+
       alert(error instanceof Error ? error.message : "Erro ao alterar status.");
     }
   }
@@ -632,7 +637,9 @@ export default function UsuariosPage() {
                     disabled={!!usuarioEditando || salvando}
                     maxLength={8}
                     onChange={(event) => {
-                      const apenasNumeros = event.target.value.replace(/\D/g, "").slice(0, 8);
+                      const apenasNumeros = event.target.value
+                        .replace(/\D/g, "")
+                        .slice(0, 8);
                       setForm({ ...form, nip: apenasNumeros });
                     }}
                     placeholder="Ex: 00000000"

@@ -1,8 +1,15 @@
 "use server";
 
 import { AuthError } from "next-auth";
+
 import { signIn } from "@/lib/auth";
-export type LoginState = { error?: string };
+import { prisma } from "@/lib/prisma";
+import { normalizarIdentificador } from "@/lib/validations/login";
+
+export type LoginState = {
+  error?: string;
+};
+
 function destinoSeguro(callbackUrl: string) {
   if (!callbackUrl.startsWith("/")) {
     return "/dashboard";
@@ -12,7 +19,7 @@ function destinoSeguro(callbackUrl: string) {
     return "/dashboard";
   }
 
-  return callbackUrl.startsWith("/dashboard") ? callbackUrl : "/dashboard";
+  return callbackUrl;
 }
 
 export async function authenticate(
@@ -21,23 +28,42 @@ export async function authenticate(
 ): Promise<LoginState> {
   const identifier = String(formData.get("identifier") ?? "").trim();
   const password = String(formData.get("password") ?? "");
-  const callbackUrl = destinoSeguro(
-    String(formData.get("callbackUrl") ?? "/dashboard"),
-  );
 
   if (!identifier || !password) {
-    return { error: "NIP/e-mail e senha são obrigatórios." };
+    return {
+      error: "NIP/e-mail e senha são obrigatórios.",
+    };
   }
 
   try {
+    const identificador = normalizarIdentificador(identifier);
+
+    const user = await prisma.user.findFirst({
+      where:
+        identificador.tipo === "nip"
+          ? { nip: identificador.valor }
+          : { email: identificador.valor },
+      include: {
+        role: true,
+      },
+    });
+
+    const callbackUrl = destinoSeguro(
+      String(formData.get("callbackUrl") ?? "/dashboard"),
+    );
+
+    const destino = user?.role.nome === "Usuário" ? "/telao" : callbackUrl;
+
     await signIn("credentials", {
       identifier,
       password,
-      redirectTo: callbackUrl,
+      redirectTo: destino,
     });
   } catch (error) {
     if (error instanceof AuthError) {
-      return { error: "NIP/e-mail ou senha incorretos." };
+      return {
+        error: "NIP/e-mail ou senha incorretos.",
+      };
     }
 
     throw error;

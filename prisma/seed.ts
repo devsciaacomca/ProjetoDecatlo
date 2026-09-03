@@ -39,17 +39,47 @@ async function main() {
     update: { descricao: "Pode controlar a partida" },
     create: { nome: "Apresentador", descricao: "Pode controlar a partida" },
   });
-
-  const cadastradorRole = await prisma.role.upsert({
-    where: { nome: "Cadastrador" },
-    update: { descricao: "Pode gerenciar perguntas" },
-    create: { nome: "Cadastrador", descricao: "Pode gerenciar perguntas" },
-  });
-
+  // Permissões do Usuário
+  // O usuário comum pode acessar somente o telão.
+  const usuarioPerms = permissions.filter(
+    (permission) => permission.chave === "telao.abrir",
+  );
   const usuarioRole = await prisma.role.upsert({
     where: { nome: "Usuário" },
     update: { descricao: "Usuário padrão" },
     create: { nome: "Usuário", descricao: "Usuário padrão" },
+  });
+
+  await prisma.rolePermission.deleteMany({
+    where: {
+      roleId: usuarioRole.id,
+      permissionId: {
+        notIn: usuarioPerms.map((permission) => permission.id),
+      },
+    },
+  });
+
+  await Promise.all(
+    usuarioPerms.map((permission) =>
+      prisma.rolePermission.upsert({
+        where: {
+          roleId_permissionId: {
+            roleId: usuarioRole.id,
+            permissionId: permission.id,
+          },
+        },
+        update: {},
+        create: {
+          roleId: usuarioRole.id,
+          permissionId: permission.id,
+        },
+      }),
+    ),
+  );
+  const cadastradorRole = await prisma.role.upsert({
+    where: { nome: "Cadastrador" },
+    update: { descricao: "Pode gerenciar perguntas" },
+    create: { nome: "Cadastrador", descricao: "Pode gerenciar perguntas" },
   });
 
   await Promise.all(
@@ -70,14 +100,16 @@ async function main() {
     ),
   );
 
-  const cadastradorPerms = permissions.filter(p => p.chave === "dashboard.acessar" || p.chave === "perguntas.gerenciar");
-  
+  const cadastradorPerms = permissions.filter(
+    (p) => p.chave === "dashboard.acessar" || p.chave === "perguntas.gerenciar",
+  );
+
   // Remove permissões antigas do cadastrador (ex: usuarios.gerenciar) se houver
   await prisma.rolePermission.deleteMany({
     where: {
       roleId: cadastradorRole.id,
-      permissionId: { notIn: cadastradorPerms.map(p => p.id) }
-    }
+      permissionId: { notIn: cadastradorPerms.map((p) => p.id) },
+    },
   });
 
   await Promise.all(
@@ -99,13 +131,18 @@ async function main() {
   );
 
   // Permissões do Apresentador
-  const apresentadorPerms = permissions.filter(p => p.chave === "dashboard.acessar" || p.chave === "jogo.gerenciar" || p.chave === "telao.abrir");
-  
+  const apresentadorPerms = permissions.filter(
+    (p) =>
+      p.chave === "dashboard.acessar" ||
+      p.chave === "jogo.gerenciar" ||
+      p.chave === "telao.abrir",
+  );
+
   await prisma.rolePermission.deleteMany({
     where: {
       roleId: apresentadorRole.id,
-      permissionId: { notIn: apresentadorPerms.map(p => p.id) }
-    }
+      permissionId: { notIn: apresentadorPerms.map((p) => p.id) },
+    },
   });
 
   await Promise.all(
@@ -128,7 +165,9 @@ async function main() {
 
   const nome = process.env.SEED_ADMIN_NOME ?? "Administrador";
   const nip = process.env.SEED_ADMIN_NIP ?? "00000001";
-  const email = (process.env.SEED_ADMIN_EMAIL ?? "admin@decatlo.local").toLowerCase();
+  const email = (
+    process.env.SEED_ADMIN_EMAIL ?? "admin@decatlo.local"
+  ).toLowerCase();
   const idade = Number(process.env.SEED_ADMIN_IDADE ?? 30);
   const senha = process.env.SEED_ADMIN_PASSWORD ?? "Decatlo@1";
 

@@ -1,14 +1,22 @@
 import { redirect } from "next/navigation";
 
+import { prisma } from "@/lib/prisma";
 import { exigirPermissao } from "@/lib/autorizacao";
-import { partidas } from "@/data/partidas/partidas";
 
 export default async function PartidaEmAndamentoPage() {
   await exigirPermissao("jogo.gerenciar");
 
-  const partidaEmAndamento = partidas.find(
-    (partida) => partida.status === "em_andamento",
-  );
+  const partidaEmAndamento = await prisma.partida.findFirst({
+    where: {
+      status: "em_andamento",
+    },
+    orderBy: {
+      atualizadaEm: "desc",
+    },
+    select: {
+      id: true,
+    },
+  });
 
   if (!partidaEmAndamento) {
     redirect("/dashboard/partidas");

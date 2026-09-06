@@ -4,29 +4,50 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Plus, Gamepad2, PlayCircle, Search, ArrowRight } from "lucide-react";
 
+type PartidaStatus = "configuracao" | "pronta" | "em_andamento" | "finalizada";
+
 type Partida = {
   id: string;
   nome: string;
   equipe1: string;
   equipe2: string;
-  status: "configuracao" | "pronta" | "em_andamento" | "finalizada";
+  status: PartidaStatus;
   perguntas: number;
   perguntaAtual: number;
   data: string;
 };
 
-const statusConfig = {
-  configuracao: { label: "Em configuração", className: "bg-slate-100 text-slate-700" },
-  pronta: { label: "Pronta", className: "bg-blue-100 text-blue-700" },
-  em_andamento: { label: "Ao vivo", className: "bg-green-100 text-green-700" },
-  finalizada: { label: "Finalizada", className: "bg-slate-100 text-slate-600" },
-} as const;
+const statusConfig: Record<
+  PartidaStatus,
+  {
+    label: string;
+    className: string;
+  }
+> = {
+  configuracao: {
+    label: "Em configuração",
+    className: "bg-slate-100 text-slate-700",
+  },
+  pronta: {
+    label: "Pronta",
+    className: "bg-blue-100 text-blue-700",
+  },
+  em_andamento: {
+    label: "Ao vivo",
+    className: "bg-green-100 text-green-700",
+  },
+  finalizada: {
+    label: "Finalizada",
+    className: "bg-slate-100 text-slate-600",
+  },
+};
 
 export default function PartidasPage() {
   const [partidas, setPartidas] = useState<Partida[]>([]);
   const [busca, setBusca] = useState("");
-  const [filtroStatus, setFiltroStatus] =
-    useState<"todas" | Partida["status"]>("todas");
+  const [filtroStatus, setFiltroStatus] = useState<"todas" | Partida["status"]>(
+    "todas",
+  );
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
 
@@ -194,7 +215,9 @@ export default function PartidasPage() {
           ) : (
             <div className="space-y-4">
               {partidasFiltradas.map((partida) => {
-                const status = statusConfig[partida.status];
+                const status =
+                  statusConfig[partida.status as keyof typeof statusConfig] ??
+                  statusConfig.configuracao;
 
                 return (
                   <div

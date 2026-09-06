@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { auth } from "@/lib/auth";
-import { partidas } from "@/data/partidas/partidas";
+import { prisma } from "@/lib/prisma";
 
 export default async function TelaoPage() {
   const session = await auth();
@@ -14,9 +14,17 @@ export default async function TelaoPage() {
     redirect("/sem-permissao");
   }
 
-  const partidaEmAndamento = partidas.find(
-    (partida) => partida.status === "em_andamento",
-  );
+  const partidaEmAndamento = await prisma.partida.findFirst({
+    where: {
+      status: "em_andamento",
+    },
+    orderBy: {
+      atualizadaEm: "desc",
+    },
+    select: {
+      id: true,
+    },
+  });
 
   if (partidaEmAndamento) {
     redirect(`/telao/${partidaEmAndamento.id}`);

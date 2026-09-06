@@ -1,5 +1,5 @@
 // This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// learn more about it: https://pris.ly/d/prisma-schema
 
 generator client {
   provider = "prisma-client"
@@ -11,18 +11,21 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  nome      String
-  nip       String   @unique @db.VarChar(8)
-  email     String   @unique
-  idade     Int
-  senhaHash String
-  roleId    Int
-  role      Role     @relation(fields: [roleId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          Int        @id @default(autoincrement())
+  nome        String
+  nip         String     @unique @db.VarChar(8)
+  email       String     @unique
+  idade       Int
+  senhaHash   String
+  ativo       Boolean    @default(true)
+  roleId      Int
+  role        Role       @relation(fields: [roleId], references: [id])
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  auditorias  AuditLog[]
 
   @@index([roleId])
+  @@index([ativo])
 }
 
 model Role {
@@ -36,12 +39,12 @@ model Role {
 }
 
 model Permission {
-  id        Int              @id @default(autoincrement())
-  chave     String           @unique
-  descricao String
-  roles     RolePermission[]
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
+  id          Int              @id @default(autoincrement())
+  chave       String           @unique
+  descricao   String
+  roles       RolePermission[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
 }
 
 model RolePermission {
@@ -56,13 +59,18 @@ model RolePermission {
 model Pergunta {
   id              Int      @id @default(autoincrement())
   assunto         String
-  tipo            String // 'objetiva' ou 'aberta'
+  tipo            String
   enunciado       String   @db.Text
   respostaCorreta String
   explicacao      String   @db.Text
   criadaEm        DateTime @default(now())
 
   alternativas Alternativa[]
+  partidas     PartidaPergunta[]
+  respostas    PartidaResposta[]
+
+  @@index([assunto])
+  @@index([tipo])
 }
 
 model Alternativa {
@@ -73,15 +81,80 @@ model Alternativa {
 }
 
 model Partida {
-  id               String   @id @default(uuid())
-  nome             String
-  equipe1          String
-  equipe2          String
-  status           String // 'configuracao', 'pronta', 'em_andamento', 'finalizada'
-  perguntas        Int
-  perguntaAtual    Int
-  pontuacaoEquipeA Int      @default(0)
-  pontuacaoEquipeB Int      @default(0)
-  data             DateTime
-  criadaEm         DateTime @default(now())
+  id                    String   @id @default(uuid())
+  nome                  String
+  equipe1               String
+  equipe2               String
+  status                String
+  perguntas             Int
+  perguntaAtual         Int      @default(0)
+  pontuacaoEquipeA      Int      @default(0)
+  pontuacaoEquipeB      Int      @default(0)
+  tempoResposta         Int      @default(30)
+  embaralharPerguntas   Boolean  @default(false)
+  mostrarExplicacao     Boolean  @default(true)
+  permitirPular         Boolean  @default(true)
+  equipeDaVez           String   @default("A")
+  tempoRestante         Int      @default(30)
+  cronometroFimEm      DateTime?
+  respostaVisivel       Boolean  @default(false)
+  resultadoPergunta     String?
+  data                  DateTime
+  criadaEm              DateTime @default(now())
+  atualizadaEm          DateTime @updatedAt
+
+  perguntasSelecionadas PartidaPergunta[]
+  respostas              PartidaResposta[]
+
+  @@index([status])
+  @@index([data])
+}
+
+model PartidaPergunta {
+  partidaId  String
+  perguntaId Int
+  ordem      Int
+
+  partida  Partida  @relation(fields: [partidaId], references: [id], onDelete: Cascade)
+  pergunta Pergunta @relation(fields: [perguntaId], references: [id], onDelete: Restrict)
+
+  @@id([partidaId, perguntaId])
+  @@unique([partidaId, ordem])
+  @@index([perguntaId])
+}
+
+model PartidaResposta {
+  id           Int      @id @default(autoincrement())
+  partidaId    String
+  perguntaId   Int
+  equipe       String
+  resultado    String
+  resposta     String?
+  pontos       Int      @default(0)
+  respondidaEm DateTime @default(now())
+
+  partida  Partida  @relation(fields: [partidaId], references: [id], onDelete: Cascade)
+  pergunta Pergunta @relation(fields: [perguntaId], references: [id], onDelete: Restrict)
+
+  @@unique([partidaId, perguntaId])
+  @@index([partidaId])
+  @@index([perguntaId])
+}
+
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  usuarioId  Int?
+  acao       String
+  entidade   String
+  entidadeId String?
+  descricao  String   @db.Text
+  detalhes   String?  @db.Text
+  criadoEm   DateTime @default(now())
+
+  usuario User? @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+
+  @@index([usuarioId])
+  @@index([acao])
+  @@index([entidade])
+  @@index([criadoEm])
 }

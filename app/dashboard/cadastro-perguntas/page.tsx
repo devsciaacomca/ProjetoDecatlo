@@ -1,10 +1,22 @@
 "use client";
-import { useState } from "react";
-import { perguntas } from "@/data/perguntas/perguntas";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { PerguntaTipo } from "@/types/perguntas";
-type AlternativaForm = { id: number; texto: string };
+
+type AlternativaForm = {
+  id: number;
+  texto: string;
+};
+
 export default function CadastroPerguntasPage() {
+  const router = useRouter();
+
   const [assunto, setAssunto] = useState("");
+  const [assuntos, setAssuntos] = useState<string[]>([]);
+  const [carregandoAssuntos, setCarregandoAssuntos] = useState(true);
+  const [erroAssuntos, setErroAssuntos] = useState("");
+
   const [tipo, setTipo] = useState<PerguntaTipo>("objetiva");
   const [enunciado, setEnunciado] = useState("");
   const [explicacao, setExplicacao] = useState("");
@@ -14,26 +26,75 @@ export default function CadastroPerguntasPage() {
     { id: 3, texto: "" },
   ]);
   const [respostaCorreta, setRespostaCorreta] = useState<number | null>(null);
-  const assuntos = [...new Set(perguntas.map((pergunta) => pergunta.assunto))];
+
+  useEffect(() => {
+    let ativo = true;
+
+    async function carregarAssuntos() {
+      try {
+        setCarregandoAssuntos(true);
+        setErroAssuntos("");
+
+        const response = await fetch("/api/perguntas?assuntos=true");
+
+        if (!response.ok) {
+          throw new Error("Não foi possível carregar os assuntos.");
+        }
+
+        const resultado = await response.json();
+
+        if (!resultado.success) {
+          throw new Error(resultado.error || "Não foi possível carregar os assuntos.");
+        }
+
+        if (ativo) {
+          setAssuntos(resultado.data ?? []);
+        }
+      } catch (error) {
+        if (ativo) {
+          setErroAssuntos(
+            error instanceof Error
+              ? error.message
+              : "Não foi possível carregar os assuntos.",
+          );
+        }
+      } finally {
+        if (ativo) {
+          setCarregandoAssuntos(false);
+        }
+      }
+    }
+
+    carregarAssuntos();
+
+    return () => {
+      ativo = false;
+    };
+  }, []);
 
   function adicionarAlternativa() {
     const novoId =
       alternativas.length > 0
         ? Math.max(...alternativas.map((alternativa) => alternativa.id)) + 1
         : 1;
+
     setAlternativas((prev) => [...prev, { id: novoId, texto: "" }]);
   }
+
   function removerAlternativa(id: number) {
     if (alternativas.length === 1) {
       return;
     }
+
     setAlternativas((prev) =>
       prev.filter((alternativa) => alternativa.id !== id),
     );
+
     if (respostaCorreta === id) {
       setRespostaCorreta(null);
     }
   }
+
   function atualizarAlternativa(id: number, texto: string) {
     setAlternativas((prev) =>
       prev.map((alternativa) =>
@@ -41,76 +102,128 @@ export default function CadastroPerguntasPage() {
       ),
     );
   }
+
   function alterarTipo(novoTipo: PerguntaTipo) {
     setTipo(novoTipo);
+
     if (novoTipo === "aberta") {
       setRespostaCorreta(null);
     }
   }
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const novaPergunta = {
-      id: Math.max(...perguntas.map((pergunta) => pergunta.id)) + 1,
-      assunto,
-      tipo,
-      enunciado,
-      ...(tipo === "objetiva"
-        ? {
-            alternativas: alternativas.map((alternativa) => ({
-              id: alternativa.id,
-              texto: alternativa.texto,
-            })),
-            respostaCorreta:
-              alternativas.find(
-                (alternativa) => alternativa.id === respostaCorreta,
-              )?.texto ?? "",
-          }
-        : {}),
-      explicacao,
-      criadaEm: new Date().toLocaleDateString("pt-BR"),
-    };
-    console.log("Nova pergunta:", novaPergunta);
+
+    const resposta =
+      tipo === "objetiva"
+        ? alternativas.find(
+            (alternativa) => alternativa.id === respostaCorreta,
+          )?.texto ?? ""
+        : "";
+
+    const response = await fetch("/api/perguntas", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        assunto,
+        tipo,
+        enunciado,
+        respostaCorreta: resposta,
+        explicacao,
+        alternativas:
+          tipo === "objetiva"
+            ? alternativas.map((alternativa) => ({
+                texto: alternativa.texto,
+              }))
+            : [],
+      }),
+    });
+
+    const resultado = await response.json();
+
+    if (!response.ok || !resultado.success) {
+      alert(resultado.error || "Não foi possível cadastrar a pergunta.");
+      return;
+    }
+
+    router.push("/dashboard/gerenciamento-perguntas");
   }
 
   return (
     <main className="flex-1 p-4 sm:p-6 lg:p-8">
       <div className="mx-auto w-full max-w-3xl">
         <section className="rounded-xl border border-slate-200 bg-white shadow-sm">
-          {/* Cabeçalho */}
           <div className="border-b border-slate-200 px-5 py-4 sm:px-6 sm:py-5">
             <h1 className="text-lg font-semibold">Nova pergunta</h1>
             <p className="mt-1 text-sm text-slate-500">
               Preencha as informações da pergunta abaixo.
             </p>
           </div>
+
           <form onSubmit={handleSubmit} className="space-y-6 p-5 sm:p-6">
-            {/* Assunto */}
             <div>
-              <label className="mb-3 block text-sm font-medium">Assunto</label>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {assuntos.map((item) => {
-                  const selecionado = assunto === item;
-                  return (
-                    <button
-                      key={item}
-                      type="button"
-                      onClick={() => setAssunto(item)}
-                      className={`rounded-lg border px-3 py-3 text-sm font-medium transition ${selecionado ? "border-slate-900 bg-slate-900 text-white" : "border-slate-200 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50"}`}
-                    >
-                      {item}
-                    </button>
-                  );
-                })}
-              </div>
+              <label className="mb-3 block text-sm font-medium">
+                Assunto
+              </label>
+
+              {carregandoAssuntos ? (
+                <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
+                  Carregando assuntos...
+                </div>
+              ) : erroAssuntos ? (
+                <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+                  {erroAssuntos}
+                </div>
+              ) : assuntos.length === 0 ? (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                  Nenhum assunto foi cadastrado ainda. Cadastre uma pergunta
+                  pelo fluxo de importação/seed ou crie o primeiro assunto no
+                  banco antes de cadastrar novas perguntas.
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  {assuntos.map((item) => {
+                    const selecionado = assunto === item;
+
+                    return (
+                      <button
+                        key={item}
+                        type="button"
+                        onClick={() => setAssunto(item)}
+                        className={`rounded-lg border px-3 py-3 text-sm font-medium transition ${
+                          selecionado
+                            ? "border-slate-900 bg-slate-900 text-white"
+                            : "border-slate-200 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50"
+                        }`}
+                      >
+                        {item}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {assunto && (
+                <p className="mt-2 text-xs text-slate-500">
+                  Assunto selecionado: <strong>{assunto}</strong>
+                </p>
+              )}
             </div>
-            {/* Tipo */}
+
             <div>
               <label className="mb-3 block text-sm font-medium">
                 Tipo de pergunta
               </label>
+
               <div className="grid gap-3 sm:grid-cols-2">
                 <label
-                  className={`flex cursor-pointer items-center gap-3 rounded-lg border p-4 ${tipo === "objetiva" ? "border-slate-900 bg-slate-50" : "border-slate-200"}`}
+                  className={`flex cursor-pointer items-center gap-3 rounded-lg border p-4 ${
+                    tipo === "objetiva"
+                      ? "border-slate-900 bg-slate-50"
+                      : "border-slate-200"
+                  }`}
                 >
                   <input
                     type="radio"
@@ -120,14 +233,19 @@ export default function CadastroPerguntasPage() {
                     className="h-4 w-4 accent-slate-900"
                   />
                   <div>
-                    <p className="text-sm font-medium"> Objetiva </p>
+                    <p className="text-sm font-medium">Objetiva</p>
                     <p className="text-xs text-slate-500">
                       Possui alternativas.
                     </p>
                   </div>
                 </label>
+
                 <label
-                  className={`flex cursor-pointer items-center gap-3 rounded-lg border p-4 ${tipo === "aberta" ? "border-slate-900 bg-slate-50" : "border-slate-200"}`}
+                  className={`flex cursor-pointer items-center gap-3 rounded-lg border p-4 ${
+                    tipo === "aberta"
+                      ? "border-slate-900 bg-slate-50"
+                      : "border-slate-200"
+                  }`}
                 >
                   <input
                     type="radio"
@@ -137,13 +255,13 @@ export default function CadastroPerguntasPage() {
                     className="h-4 w-4 accent-slate-900"
                   />
                   <div>
-                    <p className="text-sm font-medium"> Aberta </p>
+                    <p className="text-sm font-medium">Aberta</p>
                     <p className="text-xs text-slate-500">Resposta livre.</p>
                   </div>
                 </label>
               </div>
             </div>
-            {/* Enunciado */}
+
             <div>
               <label
                 htmlFor="enunciado"
@@ -156,11 +274,12 @@ export default function CadastroPerguntasPage() {
                 value={enunciado}
                 onChange={(event) => setEnunciado(event.target.value)}
                 rows={4}
+                required
                 placeholder="Digite a pergunta..."
                 className="w-full resize-none rounded-lg border border-slate-300 px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-slate-700 focus:ring-2 focus:ring-slate-200"
               />
             </div>
-            {/* Alternativas */}
+
             {tipo === "objetiva" && (
               <div>
                 <div className="mb-4 flex items-center justify-between">
@@ -174,27 +293,29 @@ export default function CadastroPerguntasPage() {
                     {alternativas.length} alternativas
                   </span>
                 </div>
+
                 <div className="space-y-3">
                   {alternativas.map((alternativa, index) => (
                     <div
                       key={alternativa.id}
                       className="flex items-center gap-2"
                     >
-                      {/* Correta */}
                       <label className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-slate-200 bg-slate-50">
                         <input
                           type="radio"
                           name="resposta-correta"
                           checked={respostaCorreta === alternativa.id}
-                          onChange={() => setRespostaCorreta(alternativa.id)}
+                          onChange={() =>
+                            setRespostaCorreta(alternativa.id)
+                          }
                           className="h-4 w-4 accent-slate-900"
                         />
                       </label>
-                      {/* Letra */}
+
                       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-sm font-bold text-white">
                         {String.fromCharCode(65 + index)}
                       </span>
-                      {/* Texto */}
+
                       <input
                         type="text"
                         value={alternativa.texto}
@@ -204,10 +325,11 @@ export default function CadastroPerguntasPage() {
                             event.target.value,
                           )
                         }
+                        required
                         placeholder={`Resposta ${String.fromCharCode(65 + index)}`}
                         className="h-10 min-w-0 w-full rounded-lg border border-slate-300 px-4 text-sm outline-none placeholder:text-slate-400 focus:border-slate-700 focus:ring-2 focus:ring-slate-200"
                       />
-                      {/* Remover */}
+
                       <button
                         type="button"
                         onClick={() => removerAlternativa(alternativa.id)}
@@ -219,6 +341,7 @@ export default function CadastroPerguntasPage() {
                     </div>
                   ))}
                 </div>
+
                 <button
                   type="button"
                   onClick={adicionarAlternativa}
@@ -228,7 +351,7 @@ export default function CadastroPerguntasPage() {
                 </button>
               </div>
             )}
-            {/* Explicação */}
+
             <div>
               <label
                 htmlFor="explicacao"
@@ -245,12 +368,18 @@ export default function CadastroPerguntasPage() {
                 className="w-full resize-none rounded-lg border border-slate-300 px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-slate-700 focus:ring-2 focus:ring-slate-200"
               />
             </div>
-            {/* Ações */}
+
             <div className="border-t border-slate-200 pt-5">
               <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                 <button
                   type="submit"
-                  className="rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+                  disabled={
+                    carregandoAssuntos ||
+                    !!erroAssuntos ||
+                    assuntos.length === 0 ||
+                    !assunto
+                  }
+                  className="rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Cadastrar pergunta
                 </button>

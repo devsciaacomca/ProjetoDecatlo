@@ -16,9 +16,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       async authorize(credentials) {
         const parsed = loginSchema.safeParse(credentials);
 
-        if (!parsed.success) {
-          return null;
-        }
+        if (!parsed.success) return null;
 
         const password = parsed.data.password;
         const identificador = normalizarIdentificador(parsed.data.identifier);
@@ -41,15 +39,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           },
         });
 
-        if (!user) {
-          return null;
-        }
+        if (!user || !user.ativo) return null;
 
         const senhaValida = await bcrypt.compare(password, user.senhaHash);
 
-        if (!senhaValida) {
-          return null;
-        }
+        if (!senhaValida) return null;
 
         return {
           id: String(user.id),

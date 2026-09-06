@@ -10,14 +10,7 @@ import {
   useState,
 } from "react";
 
-import {
-  partidas,
-} from "@/data/partidas/partidas";
-
-import {
-  useGameSync,
-  type GameAction,
-} from "@/hooks/useGameSync";
+import { useGameSync, type GameAction } from "@/hooks/useGameSync";
 
 import type {
   ConfiguracaoJogo,
@@ -26,58 +19,73 @@ import type {
   ResultadoPergunta,
 } from "@/types/partida-jogo";
 
+import type { Pergunta } from "@/types/perguntas";
+
+type PartidaBanco = {
+  id: string;
+  nome: string;
+  equipe1: string;
+  equipe2: string;
+  status: string;
+  perguntas: number;
+  perguntaAtual: number;
+  pontuacaoEquipeA: number;
+  pontuacaoEquipeB: number;
+  tempoResposta: number;
+  embaralharPerguntas: boolean;
+  mostrarExplicacao: boolean;
+  permitirPular: boolean;
+  equipeDaVez: string;
+  tempoRestante: number;
+  respostaVisivel: boolean;
+  resultadoPergunta: string | null;
+
+  /**
+   * O Prisma retorna Date.
+   * A API JSON normalmente entrega string.
+   */
+  cronometroFimEm: string | Date | null;
+
+  data: string | Date;
+
+  perguntasSelecionadas: Array<{
+    ordem: number;
+    perguntaId: number;
+    pergunta: Pergunta;
+  }>;
+};
+
 interface GameContextValue {
-  partida: (typeof partidas)[number];
-
+  partida: PartidaBanco;
+  pergunta: Pergunta | null;
   estado: EstadoJogo;
-
   configuracao: ConfiguracaoJogo;
-
   sincronizado: boolean;
+  carregando: boolean;
+  erro: string | null;
 
   iniciarPartida: () => void;
-
   pausarPartida: () => void;
-
   finalizarPartida: () => void;
 
   iniciarCronometro: () => void;
-
   pausarCronometro: () => void;
-
   reiniciarCronometro: () => void;
 
   proximaPergunta: () => void;
-
   perguntaAnterior: () => void;
-
   pularPergunta: () => void;
 
   trocarEquipe: () => void;
+  definirEquipe: (equipe: EquipeDaVez) => void;
 
-  definirEquipe: (
-    equipe: EquipeDaVez,
-  ) => void;
+  responder: (resultado: Exclude<ResultadoPergunta, null>) => void;
 
-  responder: (
-    resultado: Exclude<
-      ResultadoPergunta,
-      null
-    >,
-  ) => void;
+  adicionarPonto: (equipe: EquipeDaVez, quantidade?: number) => void;
 
-  adicionarPonto: (
-    equipe: EquipeDaVez,
-    quantidade?: number,
-  ) => void;
-
-  removerPonto: (
-    equipe: EquipeDaVez,
-    quantidade?: number,
-  ) => void;
+  removerPonto: (equipe: EquipeDaVez, quantidade?: number) => void;
 
   mostrarResposta: () => void;
-
   esconderResposta: () => void;
 
   resetarPartida: () => void;
@@ -85,244 +93,151 @@ interface GameContextValue {
 
 interface GameProviderProps {
   children: ReactNode;
-
   partidaId: string;
-
   role: "control" | "display";
 }
 
-const CONFIGURACAO_PADRAO: ConfiguracaoJogo =
-  {
-    tempoResposta: 30,
+const GameContext = createContext<GameContextValue | null>(null);
 
-    totalPerguntas: 12,
+function mapStatus(status: string): EstadoJogo["status"] {
+  if (status === "finalizada") {
+    return "finalizada";
+  }
 
-    permitirPular: true,
+  if (status === "em_andamento") {
+    return "em_andamento";
+  }
 
-    mostrarExplicacao: true,
-  };
+  if (status === "pausada") {
+    return "pausada";
+  }
 
-function encontrarPartida(
-  partidaId: string,
-) {
-  return partidas.find(
-    (partida) =>
-      partida.id === partidaId,
-  );
+  return "aguardando";
 }
 
-function criarEstadoInicial(
-  partidaId: string,
-  configuracao: ConfiguracaoJogo,
-): EstadoJogo {
-  const partida =
-    encontrarPartida(partidaId);
-
-  /**
-   * Caso exista uma partida no mock,
-   * usamos a pergunta atual dela.
-   *
-   * Caso contrário começamos na 1.
-   */
-  const perguntaInicial = Math.max(
-    partida?.perguntaAtual ?? 1,
-    1,
-  );
-
+function criarEstado(partida: PartidaBanco): EstadoJogo {
   return {
-    partidaId,
+    partidaId: partida.id,
 
-    status:
-      partida?.status ===
-      "finalizada"
-        ? "finalizada"
-        : "pausada",
+    status: mapStatus(partida.status),
 
-    perguntaAtual:
-      perguntaInicial,
+    perguntaAtual: Math.max(partida.perguntaAtual || 1, 1),
 
     pontos: {
-      equipe1: 0,
-      equipe2: 0,
+      equipe1: partida.pontuacaoEquipeA ?? 0,
+      equipe2: partida.pontuacaoEquipeB ?? 0,
     },
 
-    equipeDaVez: "A",
+    equipeDaVez: partida.equipeDaVez === "B" ? "B" : "A",
 
-    tempoRestante:
-      configuracao.tempoResposta,
+    tempoRestante: partida.tempoRestante ?? partida.tempoResposta ?? 30,
 
-    cronometroFimEm: null,
+    cronometroFimEm: partida.cronometroFimEm
+      ? new Date(partida.cronometroFimEm).getTime()
+      : null,
 
-    respostaVisivel: false,
+    respostaVisivel: partida.respostaVisivel ?? false,
 
-    resultado: null,
+    resultado:
+      partida.resultadoPergunta === "correta" ||
+      partida.resultadoPergunta === "incorreta"
+        ? partida.resultadoPergunta
+        : null,
   };
 }
 
-function aplicarAcao(
-  estado: EstadoJogo,
-  action: GameAction,
-): EstadoJogo {
+function aplicarAcao(estado: EstadoJogo, action: GameAction): EstadoJogo {
   switch (action.type) {
     case "INICIAR_PARTIDA":
       return {
         ...estado,
-
         status: "em_andamento",
-
-        cronometroFimEm:
-          action.cronometroFimEm,
+        cronometroFimEm: action.cronometroFimEm,
       };
 
     case "PAUSAR_PARTIDA":
       return {
         ...estado,
-
         status: "pausada",
-
         cronometroFimEm: null,
       };
 
     case "FINALIZAR_PARTIDA":
       return {
         ...estado,
-
         status: "finalizada",
-
         cronometroFimEm: null,
       };
 
     case "INICIAR_CRONOMETRO":
       return {
         ...estado,
-
         status: "em_andamento",
-
-        cronometroFimEm:
-          action.cronometroFimEm,
+        cronometroFimEm: action.cronometroFimEm,
       };
 
     case "PAUSAR_CRONOMETRO":
       return {
         ...estado,
-
         status: "pausada",
-
-        tempoRestante:
-          action.tempoRestante,
-
+        tempoRestante: action.tempoRestante,
         cronometroFimEm: null,
       };
 
     case "REINICIAR_CRONOMETRO":
       return {
         ...estado,
-
         status: "pausada",
-
-        tempoRestante:
-          action.tempoRestante,
-
+        tempoRestante: action.tempoRestante,
         cronometroFimEm: null,
       };
 
     case "PROXIMA_PERGUNTA":
-      return {
-        ...estado,
-
-        perguntaAtual:
-          action.perguntaAtual,
-
-        tempoRestante:
-          action.tempoRestante,
-
-        cronometroFimEm: null,
-
-        status: "pausada",
-
-        respostaVisivel: false,
-
-        resultado: null,
-      };
-
     case "PERGUNTA_ANTERIOR":
       return {
         ...estado,
-
-        perguntaAtual:
-          action.perguntaAtual,
-
-        tempoRestante:
-          action.tempoRestante,
-
+        perguntaAtual: action.perguntaAtual,
+        tempoRestante: action.tempoRestante,
         cronometroFimEm: null,
-
         status: "pausada",
-
         respostaVisivel: false,
-
         resultado: null,
       };
 
     case "TROCAR_EQUIPE":
-      return {
-        ...estado,
-
-        equipeDaVez:
-          action.equipeDaVez,
-      };
-
     case "DEFINIR_EQUIPE":
       return {
         ...estado,
-
-        equipeDaVez:
-          action.equipeDaVez,
+        equipeDaVez: action.equipeDaVez,
       };
 
     case "RESPONDER":
       return {
         ...estado,
-
         pontos: action.pontos,
-
-        resultado:
-          action.resultado,
-
+        resultado: action.resultado,
         respostaVisivel: true,
-
         cronometroFimEm: null,
-
         status: "pausada",
       };
 
     case "ADICIONAR_PONTO":
-      return {
-        ...estado,
-
-        pontos: action.pontos,
-      };
-
     case "REMOVER_PONTO":
       return {
         ...estado,
-
         pontos: action.pontos,
       };
 
     case "MOSTRAR_RESPOSTA":
       return {
         ...estado,
-
         respostaVisivel: true,
       };
 
     case "ESCONDER_RESPOSTA":
       return {
         ...estado,
-
         respostaVisivel: false,
-
         resultado: null,
       };
 
@@ -334,307 +249,263 @@ function aplicarAcao(
   }
 }
 
-const GameContext =
-  createContext<GameContextValue | null>(
-    null,
-  );
+export function GameProvider({ children, partidaId, role }: GameProviderProps) {
+  const [partida, setPartida] = useState<PartidaBanco | null>(null);
 
-export function GameProvider({
-  children,
-  partidaId,
-  role,
-}: GameProviderProps) {
-  const partida = useMemo(() => {
-    return encontrarPartida(partidaId);
-  }, [partidaId]);
+  const [estado, setEstado] = useState<EstadoJogo | null>(null);
 
-  if (!partida) {
-    throw new Error(
-      `Partida "${partidaId}" não encontrada.`,
-    );
-  }
+  const [carregando, setCarregando] = useState(true);
 
-  const configuracao =
-    useMemo<ConfiguracaoJogo>(() => {
-      return {
-        ...CONFIGURACAO_PADRAO,
+  const [erro, setErro] = useState<string | null>(null);
 
-        /**
-         * No futuro esses valores virão
-         * da configuração salva no banco.
-         */
-        totalPerguntas:
-          partida.perguntas ||
-          CONFIGURACAO_PADRAO.totalPerguntas,
-      };
-    }, [partida]);
+  useEffect(() => {
+    let ativo = true;
 
-  const [estado, setEstado] =
-    useState<EstadoJogo>(() =>
-      criarEstadoInicial(
-        partidaId,
-        configuracao,
-      ),
-    );
+    async function carregar() {
+      try {
+        setCarregando(true);
+        setErro(null);
 
-  /**
-   * Atualiza o estado local sem enviar
-   * nada para o outro lado.
-   *
-   * É utilizado quando o Telão recebe
-   * um comando do Controle.
-   */
-  const aplicarAcaoRemota =
-    useCallback(
-      (action: GameAction) => {
-        setEstado((atual) =>
-          aplicarAcao(
-            atual,
-            action,
-          ),
-        );
-      },
-      [],
-    );
+        const response = await fetch(`/api/partidas/${partidaId}`, {
+          cache: "no-store",
+        });
 
-  /**
-   * Quando o Telão recebe o estado
-   * inicial do Controle.
-   */
-  const receberEstado =
-    useCallback(
-      (novoEstado: EstadoJogo) => {
-        setEstado(novoEstado);
-      },
-      [],
-    );
+        const resultado = await response.json();
 
-  const {
-    conectado,
-    enviarAcao,
-  } = useGameSync({
-    partidaId,
-
-    role,
-
-    estadoAtual: estado,
-
-    onAction: aplicarAcaoRemota,
-
-    onStateReceived:
-      receberEstado,
-  });
-
-  /**
-   * Executa uma ação local.
-   *
-   * Apenas o Controle pode alterar
-   * o estado da partida.
-   */
-  const executarAcao =
-    useCallback(
-      (action: GameAction) => {
-        if (role !== "control") {
-          return;
+        if (!response.ok || !resultado.success) {
+          throw new Error(
+            resultado.error || "Não foi possível carregar a partida.",
+          );
         }
 
-        setEstado((atual) =>
-          aplicarAcao(
-            atual,
-            action,
-          ),
-        );
+        if (!ativo) return;
 
-        enviarAcao(action);
-      },
-      [
-        role,
-        enviarAcao,
-      ],
-    );
+        const dados = resultado.data as PartidaBanco;
+
+        setPartida(dados);
+        setEstado(criarEstado(dados));
+      } catch (error) {
+        if (ativo) {
+          setErro(
+            error instanceof Error
+              ? error.message
+              : "Não foi possível carregar a partida.",
+          );
+        }
+      } finally {
+        if (ativo) {
+          setCarregando(false);
+        }
+      }
+    }
+
+    carregar();
+
+    return () => {
+      ativo = false;
+    };
+  }, [partidaId]);
+
+  const aplicarAcaoRemota = useCallback((action: GameAction) => {
+    setEstado((atual) => (atual ? aplicarAcao(atual, action) : atual));
+  }, []);
+
+  const receberEstado = useCallback((novoEstado: EstadoJogo) => {
+    setEstado(novoEstado);
+  }, []);
+
+  const estadoSeguro = estado ?? {
+    partidaId,
+    status: "aguardando" as const,
+    perguntaAtual: 1,
+
+    pontos: {
+      equipe1: 0,
+      equipe2: 0,
+    },
+
+    equipeDaVez: "A" as const,
+
+    tempoRestante: 0,
+
+    cronometroFimEm: partida?.cronometroFimEm
+      ? new Date(partida.cronometroFimEm).getTime()
+      : null,
+
+    respostaVisivel: false,
+    resultado: null,
+  };
+
+  const { conectado, enviarAcao } = useGameSync({
+    partidaId,
+    role,
+    estadoAtual: estadoSeguro,
+    onAction: aplicarAcaoRemota,
+    onStateReceived: receberEstado,
+  });
+
+  const persistirEstado = useCallback(
+    async (novoEstado: EstadoJogo) => {
+      try {
+        const response = await fetch(`/api/partidas/${partidaId}/estado`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(novoEstado),
+        });
+
+        if (!response.ok) {
+          console.error("Não foi possível persistir o estado da partida.");
+        }
+      } catch (error) {
+        console.error("Erro ao persistir estado da partida:", error);
+      }
+    },
+    [partidaId],
+  );
+
+  const executarAcao = useCallback(
+    (action: GameAction) => {
+      if (role !== "control") {
+        return;
+      }
+
+      setEstado((atual) => {
+        if (!atual) {
+          return atual;
+        }
+
+        const novoEstado = aplicarAcao(atual, action);
+
+        void persistirEstado(novoEstado);
+
+        return novoEstado;
+      });
+
+      enviarAcao(action);
+    },
+    [role, persistirEstado, enviarAcao],
+  );
 
   /**
    * Cronômetro.
-   *
-   * IMPORTANTE:
-   * não sincronizamos cada segundo.
-   *
-   * Sincronizamos o timestamp final.
    */
   useEffect(() => {
     if (
-      estado.status !==
-        "em_andamento" ||
+      !estado ||
+      estado.status !== "em_andamento" ||
       estado.cronometroFimEm === null
     ) {
       return;
     }
 
-    const atualizarTempo =
-      () => {
-        setEstado((atual) => {
-          if (
-            atual.cronometroFimEm ===
-            null
-          ) {
-            return atual;
-          }
+    const atualizar = () => {
+      setEstado((atual) => {
+        if (!atual || atual.cronometroFimEm === null) {
+          return atual;
+        }
 
-          const restante =
-            Math.max(
-              0,
-              Math.ceil(
-                (atual.cronometroFimEm -
-                  Date.now()) /
-                  1000,
-              ),
-            );
+        const restante = Math.max(
+          0,
+          Math.ceil((atual.cronometroFimEm - Date.now()) / 1000),
+        );
 
-          if (restante <= 0) {
-            return {
-              ...atual,
-
-              tempoRestante: 0,
-
-              cronometroFimEm:
-                null,
-
-              status: "pausada",
-            };
-          }
-
-          return {
+        if (restante <= 0) {
+          const novo = {
             ...atual,
-
-            tempoRestante:
-              restante,
+            tempoRestante: 0,
+            cronometroFimEm: null,
+            status: "pausada" as const,
           };
-        });
-      };
 
-    atualizarTempo();
+          if (role === "control") {
+            void persistirEstado(novo);
+          }
 
-    const interval =
-      window.setInterval(
-        atualizarTempo,
-        200,
-      );
+          return novo;
+        }
 
-    return () => {
-      window.clearInterval(
-        interval,
-      );
-    };
-  }, [
-    estado.status,
-    estado.cronometroFimEm,
-  ]);
-
-  const iniciarPartida =
-    useCallback(() => {
-      const fim =
-        Date.now() +
-        estado.tempoRestante *
-          1000;
-
-      executarAcao({
-        type: "INICIAR_PARTIDA",
-
-        cronometroFimEm: fim,
+        return {
+          ...atual,
+          tempoRestante: restante,
+        };
       });
-    }, [
-      estado.tempoRestante,
-      executarAcao,
-    ]);
+    };
 
-  const pausarPartida =
-    useCallback(() => {
+    atualizar();
+
+    const interval = window.setInterval(atualizar, 200);
+
+    return () => window.clearInterval(interval);
+  }, [estado?.status, estado?.cronometroFimEm, role, persistirEstado]);
+
+  const iniciarPartida = useCallback(() => {
+    const fim = Date.now() + estadoSeguro.tempoRestante * 1000;
+
+    executarAcao({
+      type: "INICIAR_PARTIDA",
+      cronometroFimEm: fim,
+    });
+  }, [estadoSeguro.tempoRestante, executarAcao]);
+
+  const pausarPartida = useCallback(
+    () =>
       executarAcao({
         type: "PAUSAR_PARTIDA",
-      });
-    }, [executarAcao]);
+      }),
+    [executarAcao],
+  );
 
-  const finalizarPartida =
-    useCallback(() => {
+  const finalizarPartida = useCallback(
+    () =>
       executarAcao({
         type: "FINALIZAR_PARTIDA",
-      });
-    }, [executarAcao]);
+      }),
+    [executarAcao],
+  );
 
-  const iniciarCronometro =
-    useCallback(() => {
-      const tempo =
-        estado.tempoRestante >
-        0
-          ? estado.tempoRestante
-          : configuracao.tempoResposta;
+  const iniciarCronometro = useCallback(() => {
+    const tempo =
+      estadoSeguro.tempoRestante > 0
+        ? estadoSeguro.tempoRestante
+        : (partida?.tempoResposta ?? 30);
 
-      const fim =
-        Date.now() +
-        tempo * 1000;
+    executarAcao({
+      type: "INICIAR_CRONOMETRO",
+      cronometroFimEm: Date.now() + tempo * 1000,
+    });
+  }, [estadoSeguro.tempoRestante, partida?.tempoResposta, executarAcao]);
 
-      executarAcao({
-        type: "INICIAR_CRONOMETRO",
+  const pausarCronometro = useCallback(() => {
+    let tempo = estadoSeguro.tempoRestante;
 
-        cronometroFimEm: fim,
-      });
-    }, [
-      estado.tempoRestante,
-      configuracao.tempoResposta,
-      executarAcao,
-    ]);
+    if (estadoSeguro.cronometroFimEm !== null) {
+      tempo = Math.max(
+        0,
+        Math.ceil((estadoSeguro.cronometroFimEm - Date.now()) / 1000),
+      );
+    }
 
-  const pausarCronometro =
-    useCallback(() => {
-      let tempoAtual =
-        estado.tempoRestante;
+    executarAcao({
+      type: "PAUSAR_CRONOMETRO",
+      tempoRestante: tempo,
+    });
+  }, [estadoSeguro, executarAcao]);
 
-      if (
-        estado.cronometroFimEm !==
-        null
-      ) {
-        tempoAtual =
-          Math.max(
-            0,
-            Math.ceil(
-              (estado.cronometroFimEm -
-                Date.now()) /
-                1000,
-            ),
-          );
-      }
+  const reiniciarCronometro = useCallback(() => {
+    executarAcao({
+      type: "REINICIAR_CRONOMETRO",
+      tempoRestante: partida?.tempoResposta ?? 30,
+    });
+  }, [partida?.tempoResposta, executarAcao]);
 
-      executarAcao({
-        type: "PAUSAR_CRONOMETRO",
+  const proximaPergunta = useCallback(() => {
+    if (!partida) {
+      return;
+    }
 
-        tempoRestante:
-          tempoAtual,
-      });
-    }, [
-      estado.tempoRestante,
-      estado.cronometroFimEm,
-      executarAcao,
-    ]);
-
-  const reiniciarCronometro =
-    useCallback(() => {
-      executarAcao({
-        type: "REINICIAR_CRONOMETRO",
-
-        tempoRestante:
-          configuracao.tempoResposta,
-      });
-    }, [
-      configuracao.tempoResposta,
-      executarAcao,
-    ]);
-
-const proximaPergunta =
-  useCallback(() => {
-    if (
-      estado.perguntaAtual >=
-      configuracao.totalPerguntas
-    ) {
+    if (estadoSeguro.perguntaAtual >= partida.perguntas) {
       executarAcao({
         type: "FINALIZAR_PARTIDA",
       });
@@ -645,303 +516,268 @@ const proximaPergunta =
     executarAcao({
       type: "PROXIMA_PERGUNTA",
 
-      perguntaAtual:
-        estado.perguntaAtual + 1,
+      perguntaAtual: estadoSeguro.perguntaAtual + 1,
 
-      tempoRestante:
-        configuracao.tempoResposta,
+      tempoRestante: partida.tempoResposta,
     });
-  }, [
-    estado.perguntaAtual,
-    configuracao.totalPerguntas,
-    configuracao.tempoResposta,
-    executarAcao,
-  ]);
+  }, [partida, estadoSeguro.perguntaAtual, executarAcao]);
 
-  const perguntaAnterior =
-    useCallback(() => {
-      if (
-        estado.perguntaAtual <= 1
-      ) {
-        return;
-      }
+  const perguntaAnterior = useCallback(() => {
+    if (estadoSeguro.perguntaAtual <= 1 || !partida) {
+      return;
+    }
 
-      executarAcao({
-        type: "PERGUNTA_ANTERIOR",
+    executarAcao({
+      type: "PERGUNTA_ANTERIOR",
 
-        perguntaAtual:
-          estado.perguntaAtual - 1,
+      perguntaAtual: estadoSeguro.perguntaAtual - 1,
 
-        tempoRestante:
-          configuracao.tempoResposta,
-      });
-    }, [
-      estado.perguntaAtual,
-      configuracao,
-      executarAcao,
-    ]);
+      tempoRestante: partida.tempoResposta,
+    });
+  }, [estadoSeguro.perguntaAtual, partida, executarAcao]);
 
-  const pularPergunta =
-    useCallback(() => {
-      if (
-        !configuracao.permitirPular
-      ) {
-        return;
-      }
-
+  const pularPergunta = useCallback(() => {
+    if (partida?.permitirPular) {
       proximaPergunta();
-    }, [
-      configuracao.permitirPular,
-      proximaPergunta,
-    ]);
+    }
+  }, [partida?.permitirPular, proximaPergunta]);
 
-  const trocarEquipe =
-    useCallback(() => {
+  const trocarEquipe = useCallback(() => {
+    executarAcao({
+      type: "TROCAR_EQUIPE",
+
+      equipeDaVez: estadoSeguro.equipeDaVez === "A" ? "B" : "A",
+    });
+  }, [estadoSeguro.equipeDaVez, executarAcao]);
+
+  const definirEquipe = useCallback(
+    (equipe: EquipeDaVez) =>
       executarAcao({
-        type: "TROCAR_EQUIPE",
+        type: "DEFINIR_EQUIPE",
+        equipeDaVez: equipe,
+      }),
+    [executarAcao],
+  );
 
-        equipeDaVez:
-          estado.equipeDaVez === "A"
-            ? "B"
-            : "A",
+  const responder = useCallback(
+    (resultado: Exclude<ResultadoPergunta, null>) => {
+      const pontos = {
+        ...estadoSeguro.pontos,
+      };
+
+      if (resultado === "correta") {
+        if (estadoSeguro.equipeDaVez === "A") {
+          pontos.equipe1 += 1;
+        } else {
+          pontos.equipe2 += 1;
+        }
+      }
+
+      executarAcao({
+        type: "RESPONDER",
+        resultado,
+        pontos,
       });
-    }, [
-      estado.equipeDaVez,
-      executarAcao,
-    ]);
+    },
+    [estadoSeguro, executarAcao],
+  );
 
-  const definirEquipe =
-    useCallback(
-      (equipe: EquipeDaVez) => {
-        executarAcao({
-          type: "DEFINIR_EQUIPE",
+  const adicionarPonto = useCallback(
+    (equipe: EquipeDaVez, quantidade = 1) => {
+      const pontos = {
+        ...estadoSeguro.pontos,
+      };
 
-          equipeDaVez: equipe,
-        });
-      },
-      [executarAcao],
-    );
+      if (equipe === "A") {
+        pontos.equipe1 += quantidade;
+      } else {
+        pontos.equipe2 += quantidade;
+      }
 
-  const responder =
-    useCallback(
-      (
-        resultado: Exclude<
-          ResultadoPergunta,
-          null
-        >,
-      ) => {
-        const pontos = {
-          ...estado.pontos,
-        };
+      executarAcao({
+        type: "ADICIONAR_PONTO",
+        equipe,
+        quantidade,
+        pontos,
+      });
+    },
+    [estadoSeguro.pontos, executarAcao],
+  );
 
-        if (resultado === "correta") {
-          if (
-            estado.equipeDaVez ===
-            "A"
-          ) {
-            pontos.equipe1 += 1;
-          } else {
-            pontos.equipe2 += 1;
-          }
-        }
+  const removerPonto = useCallback(
+    (equipe: EquipeDaVez, quantidade = 1) => {
+      const pontos = {
+        ...estadoSeguro.pontos,
+      };
 
-        executarAcao({
-          type: "RESPONDER",
+      if (equipe === "A") {
+        pontos.equipe1 = Math.max(0, pontos.equipe1 - quantidade);
+      } else {
+        pontos.equipe2 = Math.max(0, pontos.equipe2 - quantidade);
+      }
 
-          resultado,
+      executarAcao({
+        type: "REMOVER_PONTO",
+        equipe,
+        quantidade,
+        pontos,
+      });
+    },
+    [estadoSeguro.pontos, executarAcao],
+  );
 
-          pontos,
-        });
-      },
-      [
-        estado.pontos,
-        estado.equipeDaVez,
-        executarAcao,
-      ],
-    );
-
-  const adicionarPonto =
-    useCallback(
-      (
-        equipe: EquipeDaVez,
-        quantidade = 1,
-      ) => {
-        const pontos = {
-          ...estado.pontos,
-        };
-
-        if (equipe === "A") {
-          pontos.equipe1 +=
-            quantidade;
-        } else {
-          pontos.equipe2 +=
-            quantidade;
-        }
-
-        executarAcao({
-          type: "ADICIONAR_PONTO",
-
-          equipe,
-
-          quantidade,
-
-          pontos,
-        });
-      },
-      [
-        estado.pontos,
-        executarAcao,
-      ],
-    );
-
-  const removerPonto =
-    useCallback(
-      (
-        equipe: EquipeDaVez,
-        quantidade = 1,
-      ) => {
-        const pontos = {
-          ...estado.pontos,
-        };
-
-        if (equipe === "A") {
-          pontos.equipe1 =
-            Math.max(
-              0,
-              pontos.equipe1 -
-                quantidade,
-            );
-        } else {
-          pontos.equipe2 =
-            Math.max(
-              0,
-              pontos.equipe2 -
-                quantidade,
-            );
-        }
-
-        executarAcao({
-          type: "REMOVER_PONTO",
-
-          equipe,
-
-          quantidade,
-
-          pontos,
-        });
-      },
-      [
-        estado.pontos,
-        executarAcao,
-      ],
-    );
-
-  const mostrarResposta =
-    useCallback(() => {
+  const mostrarResposta = useCallback(
+    () =>
       executarAcao({
         type: "MOSTRAR_RESPOSTA",
-      });
-    }, [executarAcao]);
+      }),
+    [executarAcao],
+  );
 
-  const esconderResposta =
-    useCallback(() => {
+  const esconderResposta = useCallback(
+    () =>
       executarAcao({
         type: "ESCONDER_RESPOSTA",
-      });
-    }, [executarAcao]);
+      }),
+    [executarAcao],
+  );
 
-  const resetarPartida =
-    useCallback(() => {
-      const novoEstado =
-        criarEstadoInicial(
-          partidaId,
-          configuracao,
-        );
+  const resetarPartida = useCallback(() => {
+    if (!partida) {
+      return;
+    }
 
-      executarAcao({
-        type: "RESETAR_PARTIDA",
+    const inicial = criarEstado(partida);
 
-        estado: novoEstado,
-      });
-    }, [
-      partidaId,
-      configuracao,
-      executarAcao,
-    ]);
+    inicial.status = "aguardando";
 
-  const value =
-    useMemo<GameContextValue>(
-      () => ({
-        partida,
+    inicial.perguntaAtual = 1;
 
-        estado,
+    inicial.pontos = {
+      equipe1: 0,
+      equipe2: 0,
+    };
 
+    inicial.equipeDaVez = "A";
+
+    inicial.tempoRestante = partida.tempoResposta;
+
+    inicial.cronometroFimEm = null;
+
+    inicial.respostaVisivel = false;
+
+    inicial.resultado = null;
+
+    executarAcao({
+      type: "RESETAR_PARTIDA",
+      estado: inicial,
+    });
+  }, [partida, executarAcao]);
+
+  const configuracao = useMemo<ConfiguracaoJogo>(
+    () => ({
+      tempoResposta: partida?.tempoResposta ?? 30,
+
+      totalPerguntas: partida?.perguntas ?? 0,
+
+      permitirPular: partida?.permitirPular ?? true,
+
+      mostrarExplicacao: partida?.mostrarExplicacao ?? true,
+    }),
+    [partida],
+  );
+
+  /**
+   * Fallback usado enquanto a partida
+   * ainda está sendo carregada.
+   *
+   * IMPORTANTE:
+   * cronometroFimEm também precisa
+   * existir aqui para satisfazer
+   * PartidaBanco.
+   */
+  const partidaSegura: PartidaBanco = partida ?? {
+    id: partidaId,
+    nome: "Carregando partida...",
+    equipe1: "Equipe 1",
+    equipe2: "Equipe 2",
+    status: "configuracao",
+    perguntas: 0,
+    perguntaAtual: 1,
+
+    pontuacaoEquipeA: 0,
+    pontuacaoEquipeB: 0,
+
+    tempoResposta: 30,
+
+    embaralharPerguntas: false,
+
+    mostrarExplicacao: true,
+
+    permitirPular: true,
+
+    equipeDaVez: "A",
+
+    tempoRestante: 30,
+
+    respostaVisivel: false,
+
+    resultadoPergunta: null,
+
+    /**
+     * Campo obrigatório do tipo
+     * PartidaBanco.
+     */
+    cronometroFimEm: null,
+
+    data: new Date(),
+
+    perguntasSelecionadas: [],
+  };
+
+  const pergunta =
+    partidaSegura.perguntasSelecionadas.find(
+      (item) => item.ordem === estadoSeguro.perguntaAtual,
+    )?.pergunta ?? null;
+
+  return (
+    <GameContext.Provider
+      value={{
+        partida: partidaSegura,
+        pergunta,
+        estado: estadoSeguro,
         configuracao,
 
         sincronizado: conectado,
 
+        carregando,
+        erro,
+
         iniciarPartida,
-
         pausarPartida,
-
         finalizarPartida,
 
         iniciarCronometro,
-
         pausarCronometro,
-
         reiniciarCronometro,
 
         proximaPergunta,
-
         perguntaAnterior,
-
         pularPergunta,
 
         trocarEquipe,
-
         definirEquipe,
 
         responder,
 
         adicionarPonto,
-
         removerPonto,
 
         mostrarResposta,
-
         esconderResposta,
 
         resetarPartida,
-      }),
-      [
-        partida,
-        estado,
-        configuracao,
-        conectado,
-        iniciarPartida,
-        pausarPartida,
-        finalizarPartida,
-        iniciarCronometro,
-        pausarCronometro,
-        reiniciarCronometro,
-        proximaPergunta,
-        perguntaAnterior,
-        pularPergunta,
-        trocarEquipe,
-        definirEquipe,
-        responder,
-        adicionarPonto,
-        removerPonto,
-        mostrarResposta,
-        esconderResposta,
-        resetarPartida,
-      ],
-    );
-
-  return (
-    <GameContext.Provider
-      value={value}
+      }}
     >
       {children}
     </GameContext.Provider>
@@ -949,13 +785,10 @@ const proximaPergunta =
 }
 
 export function useGame() {
-  const context =
-    useContext(GameContext);
+  const context = useContext(GameContext);
 
   if (!context) {
-    throw new Error(
-      "useGame deve ser utilizado dentro de GameProvider.",
-    );
+    throw new Error("useGame deve ser usado dentro de GameProvider.");
   }
 
   return context;

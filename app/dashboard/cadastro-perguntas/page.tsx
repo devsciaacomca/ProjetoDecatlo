@@ -26,7 +26,9 @@ export default function CadastroPerguntasPage() {
     { id: 3, texto: "" },
   ]);
   const [respostaCorreta, setRespostaCorreta] = useState<number | null>(null);
-
+  const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState("");
+  const [respostaCorretaAberta, setRespostaCorretaAberta] = useState("");
   useEffect(() => {
     let ativo = true;
 
@@ -44,7 +46,9 @@ export default function CadastroPerguntasPage() {
         const resultado = await response.json();
 
         if (!resultado.success) {
-          throw new Error(resultado.error || "Não foi possível carregar os assuntos.");
+          throw new Error(
+            resultado.error || "Não foi possível carregar os assuntos.",
+          );
         }
 
         if (ativo) {
@@ -108,47 +112,65 @@ export default function CadastroPerguntasPage() {
 
     if (novoTipo === "aberta") {
       setRespostaCorreta(null);
+    } else {
+      setRespostaCorretaAberta("");
     }
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setErro("");
 
-    const resposta =
-      tipo === "objetiva"
-        ? alternativas.find(
-            (alternativa) => alternativa.id === respostaCorreta,
-          )?.texto ?? ""
-        : "";
+    const assuntoNormalizado = assunto.trim();
 
-    const response = await fetch("/api/perguntas", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        assunto,
-        tipo,
-        enunciado,
-        respostaCorreta: resposta,
-        explicacao,
-        alternativas:
-          tipo === "objetiva"
-            ? alternativas.map((alternativa) => ({
-                texto: alternativa.texto,
-              }))
-            : [],
-      }),
-    });
-
-    const resultado = await response.json();
-
-    if (!response.ok || !resultado.success) {
-      alert(resultado.error || "Não foi possível cadastrar a pergunta.");
+    if (!assuntoNormalizado) {
+      setErro("Informe um assunto.");
       return;
     }
 
-    router.push("/dashboard/gerenciamento-perguntas");
+    const resposta =
+      tipo === "objetiva"
+        ? (alternativas.find(
+            (alternativa) => alternativa.id === respostaCorreta,
+          )?.texto ?? "")
+        : respostaCorretaAberta.trim();
+
+    try {
+      setSalvando(true);
+
+      const response = await fetch("/api/perguntas", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          assunto: assuntoNormalizado,
+          tipo,
+          enunciado,
+          respostaCorreta: resposta,
+          explicacao,
+          alternativas:
+            tipo === "objetiva"
+              ? alternativas.map((alternativa) => ({
+                  texto: alternativa.texto,
+                }))
+              : [],
+        }),
+      });
+
+      const resultado = await response.json();
+
+      if (!response.ok || !resultado.success) {
+        setErro(resultado.error || "Não foi possível cadastrar a pergunta.");
+        return;
+      }
+
+      router.push("/dashboard/gerenciamento-perguntas");
+    } catch {
+      setErro("Não foi possível conectar ao servidor.");
+    } finally {
+      setSalvando(false);
+    }
   }
 
   return (
@@ -158,57 +180,72 @@ export default function CadastroPerguntasPage() {
           <div className="border-b border-slate-200 px-5 py-4 sm:px-6 sm:py-5">
             <h1 className="text-lg font-semibold">Nova pergunta</h1>
             <p className="mt-1 text-sm text-slate-500">
-              Preencha as informações da pergunta abaixo.
+              Crie perguntas usando um assunto existente ou cadastre um novo.
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6 p-5 sm:p-6">
             <div>
-              <label className="mb-3 block text-sm font-medium">
+              <label
+                htmlFor="assunto"
+                className="mb-2 block text-sm font-medium"
+              >
                 Assunto
               </label>
 
-              {carregandoAssuntos ? (
-                <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
-                  Carregando assuntos...
-                </div>
-              ) : erroAssuntos ? (
-                <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-                  {erroAssuntos}
-                </div>
-              ) : assuntos.length === 0 ? (
-                <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                  Nenhum assunto foi cadastrado ainda. Cadastre uma pergunta
-                  pelo fluxo de importação/seed ou crie o primeiro assunto no
-                  banco antes de cadastrar novas perguntas.
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                  {assuntos.map((item) => {
-                    const selecionado = assunto === item;
+              <input
+                id="assunto"
+                name="assunto"
+                type="text"
+                list="assuntos-disponiveis"
+                value={assunto}
+                onChange={(event) => setAssunto(event.target.value)}
+                required
+                disabled={carregandoAssuntos}
+                placeholder="Ex.: História, Ciências, Esportes..."
+                className="h-11 w-full rounded-lg border border-slate-300 px-4 text-sm outline-none placeholder:text-slate-400 focus:border-slate-700 focus:ring-2 focus:ring-slate-200 disabled:bg-slate-50"
+              />
 
-                    return (
-                      <button
-                        key={item}
-                        type="button"
-                        onClick={() => setAssunto(item)}
-                        className={`rounded-lg border px-3 py-3 text-sm font-medium transition ${
-                          selecionado
-                            ? "border-slate-900 bg-slate-900 text-white"
-                            : "border-slate-200 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50"
-                        }`}
-                      >
-                        {item}
-                      </button>
-                    );
-                  })}
-                </div>
+              <datalist id="assuntos-disponiveis">
+                {assuntos.map((item) => (
+                  <option key={item} value={item} />
+                ))}
+              </datalist>
+
+              <p className="mt-2 text-xs text-slate-500">
+                Você pode selecionar um assunto existente ou digitar um novo. O
+                sistema não permite duplicar assuntos apenas mudando
+                maiúsculas/minúsculas.
+              </p>
+
+              {carregandoAssuntos && (
+                <p className="mt-2 text-xs text-slate-500">
+                  Carregando assuntos existentes...
+                </p>
               )}
 
-              {assunto && (
-                <p className="mt-2 text-xs text-slate-500">
-                  Assunto selecionado: <strong>{assunto}</strong>
-                </p>
+              {erroAssuntos && (
+                <p className="mt-2 text-sm text-red-600">{erroAssuntos}</p>
+              )}
+
+              {assuntos.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {assuntos.map((item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={() => setAssunto(item)}
+                      className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                        assunto.trim().toLocaleLowerCase("pt-BR") ===
+                        item.toLocaleLowerCase("pt-BR")
+                          ? "border-slate-900 bg-slate-900 text-white"
+                          : "border-slate-200 bg-white text-slate-600 hover:border-slate-400"
+                      }`}
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </div>
               )}
             </div>
 
@@ -305,9 +342,7 @@ export default function CadastroPerguntasPage() {
                           type="radio"
                           name="resposta-correta"
                           checked={respostaCorreta === alternativa.id}
-                          onChange={() =>
-                            setRespostaCorreta(alternativa.id)
-                          }
+                          onChange={() => setRespostaCorreta(alternativa.id)}
                           className="h-4 w-4 accent-slate-900"
                         />
                       </label>
@@ -351,7 +386,33 @@ export default function CadastroPerguntasPage() {
                 </button>
               </div>
             )}
+            {tipo === "aberta" && (
+              <div>
+                <label
+                  htmlFor="respostaCorretaAberta"
+                  className="mb-2 block text-sm font-medium"
+                >
+                  Resposta correta
+                </label>
 
+                <textarea
+                  id="respostaCorretaAberta"
+                  value={respostaCorretaAberta}
+                  onChange={(event) =>
+                    setRespostaCorretaAberta(event.target.value)
+                  }
+                  rows={4}
+                  required
+                  placeholder="Digite a resposta esperada para esta pergunta..."
+                  className="w-full resize-none rounded-lg border border-slate-300 px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-slate-700 focus:ring-2 focus:ring-slate-200"
+                />
+
+                <p className="mt-2 text-xs text-slate-500">
+                  Informe a resposta esperada para que o apresentador possa
+                  comparar a resposta dada pela equipe.
+                </p>
+              </div>
+            )}
             <div>
               <label
                 htmlFor="explicacao"
@@ -369,19 +430,20 @@ export default function CadastroPerguntasPage() {
               />
             </div>
 
+            {erro && (
+              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {erro}
+              </div>
+            )}
+
             <div className="border-t border-slate-200 pt-5">
               <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                 <button
                   type="submit"
-                  disabled={
-                    carregandoAssuntos ||
-                    !!erroAssuntos ||
-                    assuntos.length === 0 ||
-                    !assunto
-                  }
+                  disabled={salvando || carregandoAssuntos}
                   className="rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Cadastrar pergunta
+                  {salvando ? "Cadastrando..." : "Cadastrar pergunta"}
                 </button>
               </div>
             </div>

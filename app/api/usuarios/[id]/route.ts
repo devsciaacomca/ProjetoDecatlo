@@ -2,19 +2,30 @@ import { NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { successResponse, errorResponse, commonErrors } from "@/lib/api-response";
+import {
+  successResponse,
+  errorResponse,
+  commonErrors,
+} from "@/lib/api-response";
 import { updateUserSchema } from "@/lib/validations/usuarios";
 import { hasPermission } from "@/lib/permissions";
+import { registrarAuditoria } from "@/lib/auditoria";
 
 /**
  * GET: Busca detalhes de um usuário específico
  */
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
     const session = await auth();
     const { id } = await params;
 
-    if (!hasPermission(session, "usuarios.gerenciar") && session?.user?.id !== id) {
+    if (
+      !hasPermission(session, "usuarios.gerenciar") &&
+      session?.user?.id !== id
+    ) {
       return commonErrors.forbidden();
     }
 
@@ -31,7 +42,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           select: { nome: true },
         },
         createdAt: true,
-      }
+      },
     });
 
     if (!usuario) {
@@ -48,13 +59,19 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 /**
  * PUT: Atualiza dados de um usuário específico
  */
-export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
     const session = await auth();
     const { id } = await params;
 
     // Apenas quem tem permissão ou é o próprio usuário pode editar
-    if (!hasPermission(session, "usuarios.gerenciar") && session?.user?.id !== id) {
+    if (
+      !hasPermission(session, "usuarios.gerenciar") &&
+      session?.user?.id !== id
+    ) {
       return commonErrors.forbidden();
     }
 
@@ -68,7 +85,11 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const validation = updateUserSchema.safeParse(body);
 
     if (!validation.success) {
-      return errorResponse("Falha na validação dos dados", 400, validation.error.flatten().fieldErrors);
+      return errorResponse(
+        "Falha na validação dos dados",
+        400,
+        validation.error.flatten().fieldErrors,
+      );
     }
 
     const dadosAtualizacao = validation.data;
@@ -82,9 +103,14 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     if (hasPermission(session, "usuarios.gerenciar")) {
       if (dadosAtualizacao.email) updateData.email = dadosAtualizacao.email;
       if (dadosAtualizacao.role) {
-        const roleExistente = await prisma.role.findUnique({ where: { nome: dadosAtualizacao.role } });
+        const roleExistente = await prisma.role.findUnique({
+          where: { nome: dadosAtualizacao.role },
+        });
         if (!roleExistente) {
-          return errorResponse("O nível de acesso (role) selecionado não existe", 400);
+          return errorResponse(
+            "O nível de acesso (role) selecionado não existe",
+            400,
+          );
         }
         updateData.roleId = roleExistente.id;
       }
@@ -101,8 +127,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       const conflito = await prisma.user.findFirst({
         where: {
           email: updateData.email,
-          id: { not: parseInt(id) }
-        }
+          id: { not: parseInt(id) },
+        },
       });
 
       if (conflito) {
@@ -119,12 +145,12 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         email: true,
         nip: true,
         role: { select: { nome: true } },
-      }
+      },
     });
 
     return successResponse(
-      { ...usuarioAtualizado, role: usuarioAtualizado.role.nome, ativo: true }, 
-      "Usuário atualizado com sucesso"
+      { ...usuarioAtualizado, role: usuarioAtualizado.role.nome, ativo: true },
+      "Usuário atualizado com sucesso",
     );
   } catch (error) {
     console.error("Erro ao atualizar usuário:", error);
@@ -135,7 +161,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 /**
  * DELETE: Exclui um usuário
  */
-export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
     const session = await auth();
     const { id } = await params;
@@ -147,11 +176,14 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
 
     // Prevenir auto-exclusão por segurança
     if (session?.user?.id === id) {
-      return errorResponse("Não é possível excluir o próprio usuário que está logado.", 400);
+      return errorResponse(
+        "Não é possível excluir o próprio usuário que está logado.",
+        400,
+      );
     }
 
     await prisma.user.delete({
-      where: { id: parseInt(id) }
+      where: { id: parseInt(id) },
     });
 
     return successResponse(null, "Usuário excluído com sucesso");

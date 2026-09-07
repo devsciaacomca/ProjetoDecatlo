@@ -6,6 +6,7 @@ import {
   errorResponse,
   commonErrors,
 } from "@/lib/api-response";
+import { registrarAuditoria } from "@/lib/auditoria";
 
 function embaralhar<T>(itens: T[]) {
   const copia = [...itens];
@@ -70,7 +71,9 @@ export async function POST(request: NextRequest) {
     const mostrarExplicacao = Boolean(body.mostrarExplicacao);
     const permitirPular = Boolean(body.permitirPular);
     const assuntos = Array.isArray(body.assuntos)
-      ? body.assuntos.filter((item: unknown): item is string => typeof item === "string")
+      ? body.assuntos.filter(
+          (item: unknown): item is string => typeof item === "string",
+        )
       : [];
 
     if (!nome || !equipe1 || !equipe2) {
@@ -82,11 +85,17 @@ export async function POST(request: NextRequest) {
     }
 
     if (!Number.isInteger(totalPerguntas) || totalPerguntas < 1) {
-      return errorResponse("A quantidade de perguntas deve ser maior que zero.", 400);
+      return errorResponse(
+        "A quantidade de perguntas deve ser maior que zero.",
+        400,
+      );
     }
 
     if (!Number.isInteger(tempoResposta) || tempoResposta < 5) {
-      return errorResponse("O tempo de resposta deve ser de pelo menos 5 segundos.", 400);
+      return errorResponse(
+        "O tempo de resposta deve ser de pelo menos 5 segundos.",
+        400,
+      );
     }
 
     if (tipo !== "objetiva" && tipo !== "aberta") {
@@ -151,7 +160,20 @@ export async function POST(request: NextRequest) {
         },
       },
     });
-
+    await registrarAuditoria({
+      session,
+      acao: "CRIACAO_PARTIDA",
+      entidade: "Partida",
+      entidadeId: novaPartida.id,
+      descricao: `Criou a partida "${novaPartida.nome}".`,
+      detalhes: {
+        nome: novaPartida.nome,
+        equipe1: novaPartida.equipe1,
+        equipe2: novaPartida.equipe2,
+        perguntas: novaPartida.perguntas,
+        tempoResposta: novaPartida.tempoResposta,
+      },
+    });
     return successResponse(
       novaPartida,
       "Partida criada com perguntas selecionadas do banco.",

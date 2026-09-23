@@ -72,7 +72,9 @@ export default function DashboardPage() {
 
       setDados(json.data);
     } catch (error) {
-      setErro(error instanceof Error ? error.message : "Erro ao carregar dashboard.");
+      setErro(
+        error instanceof Error ? error.message : "Erro ao carregar dashboard.",
+      );
     } finally {
       setCarregando(false);
     }
@@ -91,10 +93,22 @@ export default function DashboardPage() {
 
   const stats = dados
     ? [
-        ["Perguntas cadastradas", dados.estatisticas.totalPerguntas, "Banco de perguntas"],
+        [
+          "Perguntas cadastradas",
+          dados.estatisticas.totalPerguntas,
+          "Banco de perguntas",
+        ],
         ["Partidas", dados.estatisticas.totalPartidas, "Total registrado"],
-        ["Em andamento", dados.estatisticas.partidasEmAndamento, "Partidas ativas"],
-        ["Usuários ativos", dados.estatisticas.totalUsuarios, "Usuários habilitados"],
+        [
+          "Em andamento",
+          dados.estatisticas.partidasEmAndamento,
+          "Partidas ativas",
+        ],
+        [
+          "Usuários ativos",
+          dados.estatisticas.totalUsuarios,
+          "Usuários habilitados",
+        ],
       ]
     : [];
 
@@ -122,8 +136,8 @@ export default function DashboardPage() {
                 <div>
                   <h2 className="text-lg font-semibold">Partidas</h2>
                   <p className="mt-1 max-w-xl text-sm leading-6 text-slate-500">
-                    Crie e configure uma nova partida, defina equipes,
-                    perguntas e regras antes de iniciar.
+                    Crie e configure uma nova partida, defina equipes, perguntas
+                    e regras antes de iniciar.
                   </p>
                 </div>
               </div>
@@ -164,7 +178,8 @@ export default function DashboardPage() {
                   <p className="mt-2 text-xs text-slate-400">
                     Pergunta {partida.perguntaAtual} de {partida.perguntas}
                     {" · "}
-                    Placar {partida.pontuacaoEquipeA} × {partida.pontuacaoEquipeB}
+                    Placar {partida.pontuacaoEquipeA} ×{" "}
+                    {partida.pontuacaoEquipeB}
                   </p>
                 </div>
 

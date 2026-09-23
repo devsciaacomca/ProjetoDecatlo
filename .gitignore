@@ -41,3 +41,8 @@ yarn-error.log*
 next-env.d.ts
 
 /app/generated/prisma
+
+
+# docker
+decatlo-web.tar
+postgres-17.tar

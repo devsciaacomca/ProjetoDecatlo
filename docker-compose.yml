@@ -1,16 +1,36 @@
-version: '3.8'
 services:
   db:
-    image: postgres:15-alpine
-    restart: always
+    image: postgres:17
+    container_name: decatlo-db
+    restart: unless-stopped
+
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password123
-      POSTGRES_DB: decatlo_db
-    ports:
-      - "5432:5432"
+      POSTGRES_DB: decatlo
+      POSTGRES_USER: decatlo
+      POSTGRES_PASSWORD: decatlo_local
+
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: decatlo-web
+    restart: unless-stopped
+
+    depends_on:
+      - db
+
+    ports:
+      - "3000:3000"
+
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://decatlo:decatlo_local@db:5432/decatlo
+      AUTH_SECRET: troque-este-segredo
+      AUTH_URL: http://192.168.0.6:3000
 
 volumes:
   postgres_data:

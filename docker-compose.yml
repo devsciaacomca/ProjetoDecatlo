@@ -28,9 +28,9 @@ services:
 
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://decatlo:decatlo_local@db:5432/decatlo
-      AUTH_SECRET: troque-este-segredo
-      AUTH_URL: http://192.168.0.6:3000
+      DATABASE_URL: ${DATABASE_URL}
+      AUTH_SECRET: ${NEXTAUTH_SECRET}
+      AUTH_URL: ${NEXTAUTH_URL}
 
 volumes:
   postgres_data:

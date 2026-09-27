@@ -1,15 +1,8 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
-
-import type {
-  EstadoJogo,
-} from "@/types/partida-jogo";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { io, Socket } from "socket.io-client";
+import type { EstadoJogo } from "@/types/partida-jogo";
 
 export type GameAction =
   | {
@@ -102,9 +95,7 @@ interface UseGameSyncProps {
 
   onAction: (action: GameAction) => void;
 
-  onStateReceived: (
-    state: EstadoJogo,
-  ) => void;
+  onStateReceived: (state: EstadoJogo) => void;
 }
 
 const CHANNEL_PREFIX = "decatlo-game";
@@ -116,15 +107,11 @@ export function useGameSync({
   onAction,
   onStateReceived,
 }: UseGameSyncProps) {
-  // TODO: Quando migrar para WebSockets, usar: const socketRef = useRef<Socket | null>(null);
-  const channelRef =
-    useRef<BroadcastChannel | null>(null);
+  const socketRef = useRef<Socket | null>(null);
 
-  const estadoRef =
-    useRef<EstadoJogo>(estadoAtual);
+  const estadoRef = useRef<EstadoJogo>(estadoAtual);
 
-  const [conectado, setConectado] =
-    useState(false);
+  const [conectado, setConectado] = useState(false);
 
   useEffect(() => {
     estadoRef.current = estadoAtual;
@@ -137,12 +124,9 @@ export function useGameSync({
         action,
       };
 
-      // TODO (WebSocket): socketRef.current?.emit("sync-game-state", message);
-      channelRef.current?.postMessage(
-        message,
-      );
+      socketRef.current?.emit("sync-game-state", { partidaId, message });
     },
-    [],
+    [partidaId],
   );
 
   useEffect(() => {
@@ -150,33 +134,24 @@ export function useGameSync({
       return;
     }
 
-    if (
-      typeof BroadcastChannel ===
-      "undefined"
-    ) {
-      return;
-    }
+    const socket: Socket = io();
+    socketRef.current = socket;
+    socket.on("connect", () => {
+      setConectado(true);
+      // Entra na sala da partida ao conectar
+      socket.emit("join-game", partidaId);
+      // Se for o Telão conectando, pede o estado atual ao Controle
+      if (role === "display") {
+        socket.emit("sync-game-state", {
+          partidaId,
+          message: { type: "STATE_REQUEST" } satisfies GameMessage,
+        });
+      }
+    });
 
-    const channel =
-      new BroadcastChannel(
-        `${CHANNEL_PREFIX}-${partidaId}`,
-      );
+    socket.on("disconnect", () => setConectado(false));
 
-    channelRef.current = channel;
-
-    // TODO (WebSocket):
-    // const socket = io(); // ou io("http://localhost:3000")
-    // socketRef.current = socket;
-    // socket.on("connect", () => setConectado(true));
-    // socket.on("game-state-updated", handleMessage);
-
-    setConectado(true);
-
-    const handleMessage = (
-      event: MessageEvent<GameMessage>,
-    ) => {
-      const message = event.data;
-
+    const handleMessage = (message: GameMessage) => {
       switch (message.type) {
         case "ACTION": {
           /**
@@ -201,11 +176,10 @@ export function useGameSync({
             break;
           }
 
-          channel.postMessage({
+          socket.emit("sync-game-state", {
             type: "STATE_RESPONSE",
             state: estadoRef.current,
           } satisfies GameMessage);
-
           break;
         }
 
@@ -218,48 +192,22 @@ export function useGameSync({
             break;
           }
 
-          onStateReceived(
-            message.state,
-          );
+          onStateReceived(message.state);
 
           break;
         }
       }
     };
 
-    channel.addEventListener(
-      "message",
-      handleMessage,
-    );
-
-    /**
-     * Quando o Telão abre, solicita
-     * o estado atual ao Controle.
-     */
-    if (role === "display") {
-      channel.postMessage({
-        type: "STATE_REQUEST",
-      } satisfies GameMessage);
-    }
+    socket.on("game-state-updated", handleMessage);
 
     return () => {
-      channel.removeEventListener(
-        "message",
-        handleMessage,
-      );
-
-      channel.close();
-
-      channelRef.current = null;
-
+      socket.off("game-state-updated", handleMessage);
+      socket.disconnect();
+      socketRef.current = null;
       setConectado(false);
     };
-  }, [
-    partidaId,
-    role,
-    onAction,
-    onStateReceived,
-  ]);
+  }, [partidaId, role, onAction, onStateReceived]);
 
   return {
     conectado,

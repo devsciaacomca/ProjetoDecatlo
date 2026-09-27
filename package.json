@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:ws": "node server.js",
     "build": "next build",
     "start": "next start",
     "start:lan": "next start -H 0.0.0.0 -p 3000",
@@ -25,6 +26,8 @@
     "prisma": "^7.9.1",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "socket.io": "^4.8.4",
+    "socket.io-client": "^4.8.4",
     "zod": "^4.4.3"
   },
   "devDependencies": {

@@ -20,16 +20,19 @@ app.prepare().then(() => {
     },
   });
 
-  // Configuração básica do WebSocket
-  io.on("connection", (socket) => {
+
+   io.on("connection", (socket) => {
     console.log("Novo cliente conectado:", socket.id);
-
-    // Quando o controle envia uma atualização, retransmite para o telão
-    socket.on("sync-game-state", (gameState) => {
-      // Faz o broadcast para todos os outros clientes conectados (ex: o telão)
-      socket.broadcast.emit("game-state-updated", gameState);
+    // Cliente (Controle ou Telão) entra na sala específica daquela partida
+    socket.on("join-game", (partidaId) => {
+      socket.join(`game-${partidaId}`);
+      console.log(`Cliente ${socket.id} entrou na partida: ${partidaId}`);
     });
-
+    // Quando o controle ou telão envia ação ou solicitação de estado
+    socket.on("sync-game-state", ({ partidaId, message }) => {
+      // Envia somente para os outros clientes daquela mesma partida
+      socket.to(`game-${partidaId}`).emit("game-state-updated", message);
+    });
     socket.on("disconnect", () => {
       console.log("Cliente desconectado:", socket.id);
     });

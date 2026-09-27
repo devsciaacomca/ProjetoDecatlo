@@ -1,9 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  allowedDevOrigins: process.env.IP_ADDRESS ? [process.env.IP_ADDRESS] : [],
 };
-module.exports = {
-  allowedDevOrigins: [process.env.IP_ADDRESS],
-}
+
 export default nextConfig;

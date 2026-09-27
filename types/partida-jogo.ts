@@ -8,10 +8,7 @@ export type StatusJogo =
   | "pausada"
   | "finalizada";
 
-export type ResultadoPergunta =
-  | "correta"
-  | "incorreta"
-  | null;
+export type ResultadoPergunta = "correta" | "incorreta" | null;
 
 export interface Pontuacao {
   equipe1: number;
@@ -33,38 +30,42 @@ export interface EstadoJogo {
 
   equipeDaVez: EquipeDaVez;
 
-  /**
-   * Tempo restante exibido.
-   */
   tempoRestante: number;
 
-  /**
-   * Timestamp absoluto de quando o cronômetro termina.
-   *
-   * Isso permite que Controle e Telão
-   * tenham o mesmo cronômetro.
-   */
   cronometroFimEm: number | null;
 
-  respostaVisivel: boolean;
+  /**
+   * Resposta escolhida pelo controlador.
+   * Não significa que foi considerada correta.
+   */
+  respostaSelecionada: string | null;
 
+  /**
+   * Equipe que realizou a tentativa atual.
+   */
+  equipeQueRespondeu: EquipeDaVez | null;
+
+  /**
+   * Resultado da tentativa.
+   */
   resultado: ResultadoPergunta;
+
+  /**
+   * Só fica true quando o controlador
+   * decidir revelar o gabarito.
+   */
+  respostaVisivel: boolean;
 }
 
 export interface ConfiguracaoJogo {
   tempoResposta: number;
-
   totalPerguntas: number;
-
   permitirPular: boolean;
-
   mostrarExplicacao: boolean;
 }
 
 export interface EstadoInicialJogo {
   partida: Partida;
-
   estado: EstadoJogo;
-
   configuracao: ConfiguracaoJogo;
 }

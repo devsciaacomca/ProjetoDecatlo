@@ -46,9 +46,17 @@ export type GameAction =
       equipeDaVez: "A" | "B";
     }
   | {
-      type: "RESPONDER";
+      type: "SELECIONAR_RESPOSTA";
+      resposta: string;
+      equipe: "A" | "B";
+    }
+  | {
+      type: "AVALIAR_RESPOSTA";
       resultado: "correta" | "incorreta";
       pontos: EstadoJogo["pontos"];
+      proximaEquipe: "A" | "B";
+      cronometroFimEm: number | null;
+      tempoRestante: number;
     }
   | {
       type: "ADICIONAR_PONTO";

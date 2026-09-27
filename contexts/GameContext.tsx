@@ -64,7 +64,10 @@ interface GameContextValue {
   pularPergunta: () => void;
   trocarEquipe: () => void;
   definirEquipe: (equipe: EquipeDaVez) => void;
-  responder: (resultado: Exclude<ResultadoPergunta, null>) => void;
+  selecionarResposta: (resposta: string) => void;
+
+  avaliarResposta: (resultado: Exclude<ResultadoPergunta, null>) => void;
+
   adicionarPonto: (equipe: EquipeDaVez, quantidade?: number) => void;
   removerPonto: (equipe: EquipeDaVez, quantidade?: number) => void;
   mostrarResposta: () => void;
@@ -103,6 +106,8 @@ function criarEstado(partida: PartidaBanco): EstadoJogo {
     cronometroFimEm: partida.cronometroFimEm
       ? new Date(partida.cronometroFimEm).getTime()
       : null,
+    respostaSelecionada: null,
+    equipeQueRespondeu: null,
     respostaVisivel: partida.respostaVisivel ?? false,
     resultado:
       partida.resultadoPergunta === "correta" ||
@@ -152,19 +157,43 @@ function aplicarAcao(estado: EstadoJogo, action: GameAction): EstadoJogo {
         cronometroFimEm: null,
         status: "pausada",
         respostaVisivel: false,
+        respostaSelecionada: null,
+        equipeQueRespondeu: null,
         resultado: null,
       };
     case "TROCAR_EQUIPE":
     case "DEFINIR_EQUIPE":
       return { ...estado, equipeDaVez: action.equipeDaVez };
-    case "RESPONDER":
+
+    case "SELECIONAR_RESPOSTA":
+      return {
+        ...estado,
+        respostaSelecionada: action.resposta,
+        equipeQueRespondeu: action.equipe,
+        resultado: null,
+      };
+
+    case "AVALIAR_RESPOSTA":
       return {
         ...estado,
         pontos: action.pontos,
         resultado: action.resultado,
-        respostaVisivel: true,
-        cronometroFimEm: null,
-        status: "pausada",
+
+        // Só revela o gabarito quando o controlador mandar.
+        respostaVisivel: false,
+
+        // Se errou, a próxima equipe assume.
+        equipeDaVez: action.proximaEquipe,
+
+        // Permite uma nova tentativa.
+        respostaSelecionada: null,
+        equipeQueRespondeu:
+          action.resultado === "correta" ? estado.equipeQueRespondeu : null,
+
+        cronometroFimEm: action.cronometroFimEm,
+        tempoRestante: action.tempoRestante,
+
+        status: action.resultado === "incorreta" ? "em_andamento" : "pausada",
       };
     case "ADICIONAR_PONTO":
     case "REMOVER_PONTO":
@@ -228,19 +257,24 @@ export function GameProvider({ children, partidaId, role }: GameProviderProps) {
   const receberEstado = useCallback((novoEstado: EstadoJogo) => {
     setEstado(novoEstado);
   }, []);
+
   const estadoSeguro = estado ?? {
     partidaId,
     status: "aguardando" as const,
     perguntaAtual: 1,
-    pontos: { equipe1: 0, equipe2: 0 },
+    pontos: {
+      equipe1: 0,
+      equipe2: 0,
+    },
     equipeDaVez: "A" as const,
     tempoRestante: 0,
-    cronometroFimEm: partida?.cronometroFimEm
-      ? new Date(partida.cronometroFimEm).getTime()
-      : null,
+    cronometroFimEm: null,
+    respostaSelecionada: null,
+    equipeQueRespondeu: null,
     respostaVisivel: false,
     resultado: null,
   };
+
   const { conectado, enviarAcao } = useGameSync({
     partidaId,
     role,
@@ -318,6 +352,7 @@ export function GameProvider({ children, partidaId, role }: GameProviderProps) {
     const interval = window.setInterval(atualizar, 200);
     return () => window.clearInterval(interval);
   }, [estado?.status, estado?.cronometroFimEm, role, persistirEstado]);
+
   const iniciarPartida = useCallback(() => {
     const fim = Date.now() + estadoSeguro.tempoRestante * 1000;
     executarAcao({ type: "INICIAR_PARTIDA", cronometroFimEm: fim });
@@ -396,9 +431,21 @@ export function GameProvider({ children, partidaId, role }: GameProviderProps) {
       executarAcao({ type: "DEFINIR_EQUIPE", equipeDaVez: equipe }),
     [executarAcao],
   );
-  const responder = useCallback(
+  const selecionarResposta = useCallback(
+    (resposta: string) => {
+      executarAcao({
+        type: "SELECIONAR_RESPOSTA",
+        resposta,
+        equipe: estadoSeguro.equipeDaVez,
+      });
+    },
+    [estadoSeguro.equipeDaVez, executarAcao],
+  );
+
+  const avaliarResposta = useCallback(
     (resultado: Exclude<ResultadoPergunta, null>) => {
       const pontos = { ...estadoSeguro.pontos };
+
       if (resultado === "correta") {
         if (estadoSeguro.equipeDaVez === "A") {
           pontos.equipe1 += 1;
@@ -406,9 +453,32 @@ export function GameProvider({ children, partidaId, role }: GameProviderProps) {
           pontos.equipe2 += 1;
         }
       }
-      executarAcao({ type: "RESPONDER", resultado, pontos });
+
+      const proximaEquipe =
+        resultado === "incorreta"
+          ? estadoSeguro.equipeDaVez === "A"
+            ? "B"
+            : "A"
+          : estadoSeguro.equipeDaVez;
+
+      const tempo = partida?.tempoResposta ?? 30;
+
+      executarAcao({
+        type: "AVALIAR_RESPOSTA",
+        resultado,
+        pontos,
+        proximaEquipe,
+        tempoRestante: resultado === "incorreta" ? tempo : 0,
+        cronometroFimEm:
+          resultado === "incorreta" ? Date.now() + tempo * 1000 : null,
+      });
     },
-    [estadoSeguro, executarAcao],
+    [
+      estadoSeguro.pontos,
+      estadoSeguro.equipeDaVez,
+      partida?.tempoResposta,
+      executarAcao,
+    ],
   );
   const adicionarPonto = useCallback(
     (equipe: EquipeDaVez, quantidade = 1) => {
@@ -455,6 +525,8 @@ export function GameProvider({ children, partidaId, role }: GameProviderProps) {
     inicial.cronometroFimEm = null;
     inicial.respostaVisivel = false;
     inicial.resultado = null;
+    inicial.respostaSelecionada = null;
+    inicial.equipeQueRespondeu = null;
     executarAcao({ type: "RESETAR_PARTIDA", estado: inicial });
   }, [partida, executarAcao]);
   const configuracao = useMemo<ConfiguracaoJogo>(
@@ -514,7 +586,8 @@ export function GameProvider({ children, partidaId, role }: GameProviderProps) {
         pularPergunta,
         trocarEquipe,
         definirEquipe,
-        responder,
+        selecionarResposta,
+        avaliarResposta,
         adicionarPonto,
         removerPonto,
         mostrarResposta,

@@ -150,6 +150,40 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
       },
     });
 
+    if (body.resultado) {
+      const partidaPergunta = await prisma.partidaPergunta.findUnique({
+        where: {
+          partidaId_ordem: {
+            partidaId: id,
+            ordem: body.perguntaAtual,
+          },
+        },
+      });
+
+      if (partidaPergunta) {
+        await prisma.partidaResposta.upsert({
+          where: {
+            partidaId_perguntaId: {
+              partidaId: id,
+              perguntaId: partidaPergunta.perguntaId,
+            },
+          },
+          update: {
+            resultado: body.resultado,
+            equipe: body.equipeDaVez,
+            pontos: body.resultado === "correta" ? 1 : 0,
+          },
+          create: {
+            partidaId: id,
+            perguntaId: partidaPergunta.perguntaId,
+            equipe: body.equipeDaVez,
+            resultado: body.resultado,
+            pontos: body.resultado === "correta" ? 1 : 0,
+          },
+        });
+      }
+    }
+
     /*
      * Auditoria de mudanças importantes.
      *

@@ -164,6 +164,7 @@ function aplicarAcao(estado: EstadoJogo, action: GameAction): EstadoJogo {
     case "TROCAR_EQUIPE":
     case "DEFINIR_EQUIPE":
       return { ...estado, equipeDaVez: action.equipeDaVez };
+<<<<<<< HEAD
 
     case "SELECIONAR_RESPOSTA":
       return {
@@ -174,10 +175,15 @@ function aplicarAcao(estado: EstadoJogo, action: GameAction): EstadoJogo {
       };
 
     case "AVALIAR_RESPOSTA":
+=======
+    case "RESPONDER":
+      const isCorreta = action.resultado === "correta";
+>>>>>>> main
       return {
         ...estado,
         pontos: action.pontos,
         resultado: action.resultado,
+<<<<<<< HEAD
 
         // Só revela o gabarito quando o controlador mandar.
         respostaVisivel: false,
@@ -194,6 +200,12 @@ function aplicarAcao(estado: EstadoJogo, action: GameAction): EstadoJogo {
         tempoRestante: action.tempoRestante,
 
         status: action.resultado === "incorreta" ? "em_andamento" : "pausada",
+=======
+        respostaVisivel: isCorreta,
+        cronometroFimEm: null,
+        status: "pausada",
+        equipeDaVez: isCorreta ? estado.equipeDaVez : (estado.equipeDaVez === "A" ? "B" : "A"),
+>>>>>>> main
       };
     case "ADICIONAR_PONTO":
     case "REMOVER_PONTO":

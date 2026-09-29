@@ -29,6 +29,8 @@ interface DashboardData {
     perguntaAtual: number;
     perguntas: number;
     data: string;
+    pontuacaoEquipeA: number;
+    pontuacaoEquipeB: number;
   } | null;
   partidaEmAndamento: {
     id: string;
@@ -126,116 +128,117 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {podeGerenciarPartidas && (
-          <section className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-              <div className="flex items-start gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-slate-100">
-                  <Gamepad2 size={24} />
+        <div className="mt-6 grid gap-6 lg:grid-cols-2">
+          {podeGerenciarPartidas && (
+            <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col justify-center">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100">
+                    <Gamepad2 size={20} className="text-slate-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-semibold">Nova Partida</h2>
+                    <p className="mt-0.5 text-xs text-slate-500 max-w-[200px]">
+                      Crie e configure uma nova disputa.
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-lg font-semibold">Partidas</h2>
-                  <p className="mt-1 max-w-xl text-sm leading-6 text-slate-500">
-                    Crie e configure uma nova partida, defina equipes, perguntas
-                    e regras antes de iniciar.
-                  </p>
-                </div>
+
+                <Link
+                  href="/dashboard/partidas/nova"
+                  className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-slate-900 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-800"
+                >
+                  <Plus size={16} />
+                  Criar
+                </Link>
               </div>
+            </section>
+          )}
 
-              <Link
-                href="/dashboard/partidas/nova"
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800"
-              >
-                <Plus size={18} />
-                Nova partida
-              </Link>
-            </div>
-          </section>
-        )}
+          <section className="rounded-xl border border-slate-200 bg-white shadow-sm flex flex-col justify-center">
+            {carregando ? (
+              <div className="px-5 py-6 text-center text-xs text-slate-500">
+                Carregando partida atual...
+              </div>
+            ) : partida ? (
+              <div className="px-5 py-5">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-green-500" />
+                      <span className="text-[10px] font-bold uppercase tracking-wide text-green-700">
+                        Em andamento
+                      </span>
+                    </div>
 
-        <section className="mt-6 rounded-xl border border-slate-200 bg-white shadow-sm">
-          {carregando ? (
-            <div className="px-6 py-10 text-center text-sm text-slate-500">
-              Carregando partida atual...
-            </div>
-          ) : partida ? (
-            <div className="px-6 py-6">
-              <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="h-2.5 w-2.5 rounded-full bg-green-500" />
-                    <span className="text-xs font-semibold uppercase tracking-wide text-green-700">
-                      Em andamento
-                    </span>
+                    <h3 className="mt-1 text-base font-semibold">{partida.nome}</h3>
+
+                    <p className="text-xs text-slate-500">
+                      {partida.equipe1} × {partida.equipe2}
+                    </p>
+
+                    <p className="mt-1 text-[10px] font-medium text-slate-400">
+                      Pergunta {partida.perguntaAtual} de {partida.perguntas}
+                      {" · "}
+                      Placar {partida.pontuacaoEquipeA} ×{" "}
+                      {partida.pontuacaoEquipeB}
+                    </p>
                   </div>
 
-                  <h3 className="mt-2 text-lg font-semibold">{partida.nome}</h3>
+                  <div className="flex flex-col gap-2 shrink-0">
+                    {podeControlarPartida && (
+                      <Link
+                        href={`/dashboard/partidas/${partida.id}/controle`}
+                        className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white"
+                      >
+                        <Gamepad2 size={14} />
+                        Controlar
+                      </Link>
+                    )}
 
-                  <p className="mt-1 text-sm text-slate-500">
-                    {partida.equipe1} × {partida.equipe2}
-                  </p>
-
-                  <p className="mt-2 text-xs text-slate-400">
-                    Pergunta {partida.perguntaAtual} de {partida.perguntas}
-                    {" · "}
-                    Placar {partida.pontuacaoEquipeA} ×{" "}
-                    {partida.pontuacaoEquipeB}
-                  </p>
-                </div>
-
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  {podeControlarPartida && (
-                    <Link
-                      href={`/dashboard/partidas/${partida.id}/controle`}
-                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white"
-                    >
-                      <Gamepad2 size={17} />
-                      Controlar partida
-                    </Link>
-                  )}
-
-                  {podeAbrirTelao && (
-                    <Link
-                      href={`/telao/${partida.id}`}
-                      target="_blank"
-                      className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700"
-                    >
-                      <Monitor size={17} />
-                      Abrir telão
-                    </Link>
-                  )}
+                    {podeAbrirTelao && (
+                      <Link
+                        href={`/telao/${partida.id}`}
+                        target="_blank"
+                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700"
+                      >
+                        <Monitor size={14} />
+                        Telão
+                      </Link>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ) : (
-            <div className="px-6 py-10 text-center">
-              <Gamepad2 size={30} className="mx-auto text-slate-300" />
-              <p className="mt-3 text-sm font-medium">
-                Nenhuma partida em andamento
-              </p>
-              <Link
-                href="/dashboard/partidas"
-                className="mt-4 inline-flex items-center gap-2 text-sm font-semibold hover:underline"
-              >
-                <List size={16} />
-                Ver partidas
-              </Link>
-            </div>
-          )}
-        </section>
+            ) : (
+              <div className="px-5 py-6 text-center">
+                <Gamepad2 size={24} className="mx-auto text-slate-300" />
+                <p className="mt-2 text-xs font-medium text-slate-600">
+                  Nenhuma partida em andamento
+                </p>
+                <Link
+                  href="/dashboard/partidas"
+                  className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-slate-900 hover:underline"
+                >
+                  <List size={14} />
+                  Ver partidas
+                </Link>
+              </div>
+            )}
+          </section>
+        </div>
 
         <section className="mt-8">
           <h2 className="mb-4 text-lg font-semibold">Acesso rápido</h2>
 
-          <div className="grid gap-5 md:grid-cols-3">
+          <div className="grid gap-6 lg:grid-cols-2">
             {podeGerenciarPartidas && (
               <Link
                 href="/dashboard/partidas"
-                className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md"
+                className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition"
               >
-                <List size={21} />
-                <h3 className="mt-5 font-semibold">Partidas</h3>
-                <p className="mt-2 text-sm text-slate-500">
+                <List size={20} className="text-slate-600" />
+                <h3 className="mt-3 text-base font-semibold">Partidas</h3>
+                <p className="mt-1 text-xs text-slate-500">
                   Consulte partidas criadas, em andamento e finalizadas.
                 </p>
               </Link>
@@ -244,26 +247,12 @@ export default function DashboardPage() {
             {podeGerenciarPerguntas && (
               <Link
                 href="/dashboard/gerenciamento-perguntas"
-                className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md"
+                className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition"
               >
-                <ClipboardList size={21} />
-                <h3 className="mt-5 font-semibold">Banco de perguntas</h3>
-                <p className="mt-2 text-sm text-slate-500">
+                <ClipboardList size={20} className="text-slate-600" />
+                <h3 className="mt-3 text-base font-semibold">Banco de perguntas</h3>
+                <p className="mt-1 text-xs text-slate-500">
                   Cadastre e gerencie as perguntas utilizadas nas partidas.
-                </p>
-              </Link>
-            )}
-
-            {podeAbrirTelao && partida && (
-              <Link
-                href={`/telao/${partida.id}`}
-                target="_blank"
-                className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md"
-              >
-                <Monitor size={21} />
-                <h3 className="mt-5 font-semibold">Telão</h3>
-                <p className="mt-2 text-sm text-slate-500">
-                  Abra a apresentação da partida atual.
                 </p>
               </Link>
             )}
@@ -301,8 +290,8 @@ export default function DashboardPage() {
               <div>
                 <h2 className="font-semibold">Última partida registrada</h2>
                 <p className="text-sm text-slate-500">
-                  {dados.ultimaPartida.nome} · {dados.ultimaPartida.equipe1} ×{" "}
-                  {dados.ultimaPartida.equipe2}
+                  {dados.ultimaPartida.nome} · {dados.ultimaPartida.equipe1} {dados.ultimaPartida.pontuacaoEquipeA} ×{" "}
+                  {dados.ultimaPartida.pontuacaoEquipeB} {dados.ultimaPartida.equipe2}
                 </p>
               </div>
             </div>

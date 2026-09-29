@@ -34,6 +34,8 @@ export async function GET() {
           status: true,
           perguntaAtual: true,
           perguntas: true,
+          pontuacaoEquipeA: true,
+          pontuacaoEquipeB: true,
           data: true,
         },
       }),

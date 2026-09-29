@@ -215,6 +215,7 @@ function ControleContent() {
           })}
         </section>
 
+<<<<<<< HEAD
         <section className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
           {/* PERGUNTA */}
           <div className="min-w-0 rounded-xl border border-slate-200 bg-white shadow-sm">
@@ -559,6 +560,65 @@ function ControleContent() {
               </button>
             </div>
           </aside>
+=======
+        <section className="mt-5 grid gap-5 lg:grid-cols-3">
+          <div className="rounded-xl border border-slate-200 bg-white shadow-sm lg:col-span-2">
+            <div className="border-b border-slate-200 px-6 py-5 flex items-center justify-between"><div><p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Pergunta {estado.perguntaAtual}</p><p className="mt-1 text-sm font-semibold">Equipe da vez: {equipeDaVez}</p></div><div className="rounded-lg bg-slate-100 px-4 py-2 text-center"><p className="text-xs text-slate-500">Tempo</p><p className="text-2xl font-bold tabular-nums">{estado.tempoRestante}s</p></div></div>
+            <div className="p-6">
+              {pergunta ? <><div className="rounded-xl bg-slate-50 p-6"><div className="mb-3 flex flex-wrap gap-2"><span className="rounded-full bg-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-600">{pergunta.assunto}</span><span className="rounded-full bg-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-600">{pergunta.tipo}</span></div><p className="text-lg font-semibold leading-8">{pergunta.enunciado}</p></div>
+                {pergunta.tipo === "objetiva" && pergunta.alternativas && <div className="mt-6 grid gap-3 sm:grid-cols-2">{pergunta.alternativas.map((a, i) => {
+                  const isRespondida = estado.resultado !== null;
+                  const letra = String.fromCharCode(65 + i);
+                  const isCorreta = letra === pergunta.respostaCorreta || a.texto.trim().toLowerCase() === pergunta.respostaCorreta.trim().toLowerCase();
+                  
+                  return (
+                    <button 
+                      key={a.id} 
+                      disabled={isRespondida || estado.status !== "em_andamento"}
+                      onClick={() => responder(isCorreta ? "correta" : "incorreta")}
+                      className={`flex items-center text-left rounded-lg border p-4 transition-colors ${
+                        estado.status !== "em_andamento" ? "opacity-60 cursor-not-allowed border-slate-200" :
+                        isRespondida ? (isCorreta && estado.respostaVisivel ? "bg-green-100 border-green-300 text-green-900" : "bg-slate-50 border-slate-200") : 
+                        "border-slate-300 hover:bg-slate-50 hover:border-slate-400 bg-white"
+                      }`}
+                    >
+                      <span className={`mr-3 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${isRespondida && isCorreta && estado.respostaVisivel ? "bg-green-200 text-green-900" : "bg-slate-100 text-slate-700"}`}>
+                        {letra}
+                      </span>
+                      <span>{a.texto}</span>
+                    </button>
+                  );
+                })}</div>}
+                {pergunta.tipo === "aberta" && (
+                  <div className="mt-6 flex gap-3">
+                    <button 
+                      onClick={() => responder("correta")} 
+                      disabled={estado.resultado !== null || estado.status !== "em_andamento"}
+                      className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Check size={16} /> Correta
+                    </button>
+                    <button 
+                      onClick={() => responder("incorreta")} 
+                      disabled={estado.resultado !== null || estado.status !== "em_andamento"}
+                      className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <X size={16} /> Incorreta
+                    </button>
+                  </div>
+                )}
+                {estado.respostaVisivel && <div className="mt-6 rounded-xl border border-green-200 bg-green-50 p-5"><p className="text-xs font-bold uppercase tracking-wide text-green-700">Resposta correta</p><p className="mt-1 font-bold text-green-900">{pergunta.respostaCorreta}</p>{configuracao.mostrarExplicacao && pergunta.explicacao && <p className="mt-3 text-sm text-green-900">{pergunta.explicacao}</p>}</div>}
+              </> : <div className="rounded-xl bg-slate-50 p-8 text-center text-sm text-slate-500">Nenhuma pergunta encontrada para esta posição.</div>}
+            </div>
+          </div>
+
+          <aside className="rounded-xl border border-slate-200 bg-white shadow-sm"><div className="border-b border-slate-200 px-5 py-5"><h2 className="font-semibold">Controles</h2><p className="mt-1 text-sm text-slate-500">Ações do apresentador.</p></div><div className="space-y-4 p-5">
+            <div><p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Cronômetro</p><div className="grid grid-cols-3 gap-2"><button onClick={iniciarCronometro} disabled={estado.status === "finalizada"} className="rounded-lg bg-slate-900 px-2 py-3 text-white"><Play size={16} className="mx-auto"/></button><button onClick={pausarCronometro} disabled={estado.cronometroFimEm === null} className="rounded-lg border px-2 py-3"><Pause size={16} className="mx-auto"/></button><button onClick={reiniciarCronometro} disabled={estado.status === "finalizada"} className="rounded-lg border px-2 py-3"><RotateCcw size={16} className="mx-auto"/></button></div></div>
+            <div><p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Exibição Telão</p><div className="grid grid-cols-2 gap-2"><button onClick={mostrarResposta} className="rounded-lg border px-3 py-2 text-xs font-semibold hover:bg-slate-50"><Eye size={15} className="mr-1 inline"/>Mostrar Resposta</button><button onClick={esconderResposta} className="rounded-lg border px-3 py-2 text-xs font-semibold hover:bg-slate-50"><EyeOff size={15} className="mr-1 inline"/>Esconder Resposta</button></div></div>
+            <div><p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Perguntas</p><div className="grid grid-cols-2 gap-2"><button onClick={perguntaAnterior} disabled={estado.perguntaAtual <= 1} className="rounded-lg border px-3 py-3 text-sm font-semibold disabled:opacity-40"><ArrowLeftCircle size={16} className="mx-auto mb-1"/>Anterior</button><button onClick={proximaPergunta} className="rounded-lg border px-3 py-3 text-sm font-semibold"><ArrowRight size={16} className="mx-auto mb-1"/>Próxima</button></div>{configuracao.permitirPular && <button onClick={pularPergunta} className="mt-2 w-full rounded-lg border border-dashed px-3 py-2.5 text-sm font-semibold"><SkipForward size={15} className="mr-1 inline"/>Pular pergunta</button>}</div>
+            <button onClick={trocarEquipe} className="w-full rounded-lg bg-slate-100 px-3 py-2.5 text-sm font-semibold hover:bg-slate-200">Trocar equipe da vez</button>
+          </div></aside>
+>>>>>>> main
         </section>
       </div>
     </main>

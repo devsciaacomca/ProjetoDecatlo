@@ -11,7 +11,7 @@ export async function exigirPermissao(permissao: PermissionChave) {
   }
 
   if (!session.user.permissions?.includes(permissao)) {
-    redirect("/sem-permissao");
+    redirect("/logout");
   }
 
   return session;
@@ -29,7 +29,7 @@ export async function exigirAlgumaPermissao(permissoes: PermissionChave[]) {
   );
 
   if (!autorizado) {
-    redirect("/sem-permissao");
+    redirect("/logout");
   }
 
   return session;

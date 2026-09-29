@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useUser } from "@/contexts/UserContext";
 interface SidebarProps {
   isOpen: boolean;
@@ -46,12 +47,6 @@ const menuSections = [
         label: "Partidas",
         icon: List,
         permission: "jogo.configurar",
-      },
-      {
-        href: "/dashboard/partidas/emandamento",
-        label: "Partida em andamento",
-        icon: PlayCircle,
-        permission: "jogo.gerenciar",
       },
     ],
   },
@@ -96,6 +91,7 @@ const menuSections = [
 }[];
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
+  const pathname = usePathname();
   const { user } = useUser();
 
   if (!user) {
@@ -142,9 +138,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
         <nav className="flex-1 overflow-y-auto px-4 py-6">
           {menuSections.map((section) => {
-            const visibleItems = section.items.filter((item) =>
-              permissions.includes(item.permission),
-            );
+            const visibleItems = section.items.filter((item) => {
+              if (item.href === "/dashboard/partidas/nova" && user?.role === "Apresentador") {
+                return false;
+              }
+              return permissions.includes(item.permission);
+            });
 
             if (visibleItems.length === 0) {
               return null;
@@ -159,13 +158,25 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <div className="space-y-1">
                   {visibleItems.map((item) => {
                     const Icon = item.icon;
+                    let isActive = false;
+                    if (item.href === "/dashboard") {
+                      isActive = pathname === "/dashboard";
+                    } else if (item.href === "/dashboard/partidas") {
+                      isActive = pathname === "/dashboard/partidas" || (pathname.startsWith("/dashboard/partidas/") && !pathname.startsWith("/dashboard/partidas/nova"));
+                    } else {
+                      isActive = pathname.startsWith(item.href);
+                    }
 
                     return (
                       <Link
                         key={item.href}
                         href={item.href}
                         onClick={onClose}
-                        className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium text-slate-300 transition hover:bg-slate-800 hover:text-white"
+                        className={`flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition ${
+                          isActive
+                            ? "bg-sky-600 text-white"
+                            : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                        }`}
                       >
                         <Icon size={19} strokeWidth={1.8} />
 

@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { successResponse, errorResponse } from "@/lib/api-response";
 
-const PAGE_SIZE = 20;
+// Removed hardcoded PAGE_SIZE
 
 export async function GET(request: NextRequest) {
   try {
@@ -22,8 +22,11 @@ export async function GET(request: NextRequest) {
     const busca = url.searchParams.get("busca")?.trim() ?? "";
     const acao = url.searchParams.get("acao")?.trim() ?? "";
     const pagina = Math.max(Number(url.searchParams.get("pagina") ?? "1") || 1, 1);
+    const porPagina = Math.max(Number(url.searchParams.get("porPagina") ?? "20") || 20, 1);
+    const ordenarPor = url.searchParams.get("ordenarPor") ?? "criadoEm";
+    const ordem = url.searchParams.get("ordem") === "asc" ? "asc" : "desc";
 
-    const skip = (pagina - 1) * PAGE_SIZE;
+    const skip = (pagina - 1) * porPagina;
 
     const where = {
       ...(acao ? { acao } : {}),
@@ -46,8 +49,8 @@ export async function GET(request: NextRequest) {
       prisma.auditLog.findMany({
         where,
         skip,
-        take: PAGE_SIZE,
-        orderBy: { criadoEm: "desc" },
+        take: porPagina,
+        orderBy: { [ordenarPor]: ordem },
         include: {
           usuario: {
             select: {
@@ -60,7 +63,7 @@ export async function GET(request: NextRequest) {
       }),
     ]);
 
-    const totalPaginas = Math.max(Math.ceil(total / PAGE_SIZE), 1);
+    const totalPaginas = Math.max(Math.ceil(total / porPagina), 1);
 
     return successResponse({
       registros: logs.map((log) => ({
@@ -76,7 +79,7 @@ export async function GET(request: NextRequest) {
       })),
       paginacao: {
         pagina,
-        porPagina: PAGE_SIZE,
+        porPagina,
         total,
         totalPaginas,
       },

@@ -112,6 +112,7 @@ function ControleContent() {
           </div>
 
           <div className="flex flex-wrap gap-2">
+            {/* STATUS SOCKET */}
             <div className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm">
               <Radio
                 size={16}
@@ -132,7 +133,7 @@ function ControleContent() {
           </div>
         </header>
 
-        {/* STATUS */}
+        {/* STATUS DA PARTIDA */}
         <section className="mb-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -155,8 +156,9 @@ function ControleContent() {
               {estado.status !== "em_andamento" &&
                 estado.status !== "finalizada" && (
                   <button
+                    type="button"
                     onClick={iniciarPartida}
-                    className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white"
+                    className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"
                   >
                     <Play size={16} />
                     Iniciar partida
@@ -165,8 +167,9 @@ function ControleContent() {
 
               {estado.status === "em_andamento" && (
                 <button
+                  type="button"
                   onClick={pausarPartida}
-                  className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-semibold"
+                  className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-semibold hover:bg-slate-50"
                 >
                   <Pause size={16} />
                   Pausar partida
@@ -175,8 +178,9 @@ function ControleContent() {
 
               {estado.status !== "finalizada" && (
                 <button
+                  type="button"
                   onClick={finalizarPartida}
-                  className="inline-flex items-center gap-2 rounded-lg border border-red-200 px-4 py-2.5 text-sm font-semibold text-red-600"
+                  className="inline-flex items-center gap-2 rounded-lg border border-red-200 px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50"
                 >
                   <Square size={15} />
                   Finalizar
@@ -205,8 +209,10 @@ function ControleContent() {
 
               <div className="h-2 overflow-hidden rounded-full bg-slate-200">
                 <div
-                  className="h-full bg-slate-900 transition-all"
-                  style={{ width: `${progresso}%` }}
+                  className="h-full bg-slate-900 transition-all duration-300"
+                  style={{
+                    width: `${progresso}%`,
+                  }}
                 />
               </div>
             </div>
@@ -221,11 +227,13 @@ function ControleContent() {
             const pontos =
               equipe === "A" ? estado.pontos.equipe1 : estado.pontos.equipe2;
 
+            const equipeAtiva = estado.equipeDaVez === equipe;
+
             return (
               <div
                 key={equipe}
-                className={`rounded-xl border p-4 shadow-sm ${
-                  estado.equipeDaVez === equipe
+                className={`rounded-xl border p-4 shadow-sm transition ${
+                  equipeAtiva
                     ? "border-slate-900 bg-slate-50"
                     : "border-slate-200 bg-white"
                 }`}
@@ -233,7 +241,7 @@ function ControleContent() {
                 <div className="flex items-center justify-between">
                   <p className="font-semibold">{nome}</p>
 
-                  {estado.equipeDaVez === equipe && (
+                  {equipeAtiva && (
                     <span className="rounded-full bg-slate-900 px-2.5 py-1 text-xs font-semibold text-white">
                       Vez
                     </span>
@@ -244,22 +252,30 @@ function ControleContent() {
 
                 <div className="mt-3 flex gap-2">
                   <button
+                    type="button"
                     onClick={() => removerPonto(equipe)}
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300"
+                    disabled={estado.status === "finalizada"}
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 hover:bg-slate-50 disabled:opacity-40"
+                    title="Remover ponto"
                   >
                     <Minus size={16} />
                   </button>
 
                   <button
+                    type="button"
                     onClick={() => adicionarPonto(equipe)}
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-white"
+                    disabled={estado.status === "finalizada"}
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-40"
+                    title="Adicionar ponto"
                   >
                     <Plus size={16} />
                   </button>
 
                   <button
+                    type="button"
                     onClick={() => definirEquipe(equipe)}
-                    className="ml-2 rounded-lg border border-slate-300 px-3 text-xs font-semibold"
+                    disabled={estado.status === "finalizada"}
+                    className="ml-2 rounded-lg border border-slate-300 px-3 text-xs font-semibold hover:bg-slate-50 disabled:opacity-40"
                   >
                     Definir vez
                   </button>
@@ -273,9 +289,10 @@ function ControleContent() {
         <section className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
           {/* PERGUNTA */}
           <div className="min-w-0 rounded-xl border border-slate-200 bg-white shadow-sm">
+            {/* CABEÇALHO DA PERGUNTA */}
             <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
               <div className="min-w-0">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className="text-xs font-bold uppercase text-slate-500">
                     Pergunta {estado.perguntaAtual}
                   </span>
@@ -304,7 +321,11 @@ function ControleContent() {
             </div>
 
             <div className="p-4">
-              {pergunta ? (
+              {!pergunta ? (
+                <div className="p-8 text-center text-sm text-slate-500">
+                  Nenhuma pergunta encontrada.
+                </div>
+              ) : (
                 <>
                   {/* ENUNCIADO */}
                   <div className="rounded-lg bg-slate-50 p-4">
@@ -355,7 +376,7 @@ function ControleContent() {
                     </div>
                   )}
 
-                  {/* AVALIAÇÃO */}
+                  {/* RESPOSTA SELECIONADA */}
                   <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
                     <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                       <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
@@ -372,7 +393,10 @@ function ControleContent() {
                     <div className="grid grid-cols-2 gap-2">
                       <button
                         type="button"
-                        disabled={!estado.respostaSelecionada}
+                        disabled={
+                          !estado.respostaSelecionada ||
+                          estado.status === "finalizada"
+                        }
                         onClick={() => avaliarResposta("correta")}
                         className="inline-flex items-center justify-center gap-2 rounded-lg bg-green-600 px-3 py-2.5 text-sm font-bold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-40"
                       >
@@ -382,7 +406,10 @@ function ControleContent() {
 
                       <button
                         type="button"
-                        disabled={!estado.respostaSelecionada}
+                        disabled={
+                          !estado.respostaSelecionada ||
+                          estado.status === "finalizada"
+                        }
                         onClick={() => avaliarResposta("incorreta")}
                         className="inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 px-3 py-2.5 text-sm font-bold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-40"
                       >
@@ -412,7 +439,8 @@ function ControleContent() {
                             ? esconderResposta
                             : mostrarResposta
                         }
-                        className="shrink-0 rounded-md border border-amber-300 bg-white px-3 py-1.5 text-xs font-bold text-amber-900 hover:bg-amber-100"
+                        disabled={estado.status === "finalizada"}
+                        className="shrink-0 rounded-md border border-amber-300 bg-white px-3 py-1.5 text-xs font-bold text-amber-900 hover:bg-amber-100 disabled:opacity-40"
                       >
                         {estado.respostaVisivel
                           ? "Ocultar no telão"
@@ -438,10 +466,6 @@ function ControleContent() {
                     )}
                   </div>
                 </>
-              ) : (
-                <div className="p-8 text-center text-sm text-slate-500">
-                  Nenhuma pergunta encontrada.
-                </div>
               )}
             </div>
           </div>
@@ -464,7 +488,7 @@ function ControleContent() {
                 </p>
 
                 <div className="flex gap-2">
-                  {/* UM ÚNICO BOTÃO PLAY/PAUSE */}
+                  {/* PLAY / PAUSE */}
                   <button
                     type="button"
                     onClick={
@@ -485,6 +509,7 @@ function ControleContent() {
                     )}
                   </button>
 
+                  {/* RESET */}
                   <button
                     type="button"
                     onClick={reiniciarCronometro}
@@ -508,7 +533,8 @@ function ControleContent() {
                   onClick={
                     estado.respostaVisivel ? esconderResposta : mostrarResposta
                   }
-                  className="flex w-full items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-xs font-semibold hover:bg-slate-50"
+                  disabled={estado.status === "finalizada"}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-xs font-semibold hover:bg-slate-50 disabled:opacity-40"
                 >
                   {estado.respostaVisivel ? (
                     <>
@@ -524,7 +550,7 @@ function ControleContent() {
                 </button>
               </div>
 
-              {/* PERGUNTAS */}
+              {/* NAVEGAÇÃO */}
               <div>
                 <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-500">
                   Perguntas
@@ -532,17 +558,23 @@ function ControleContent() {
 
                 <div className="grid grid-cols-2 gap-2">
                   <button
+                    type="button"
                     onClick={perguntaAnterior}
-                    disabled={estado.perguntaAtual <= 1}
-                    className="rounded-lg border px-3 py-2.5 text-xs font-semibold disabled:opacity-40"
+                    disabled={
+                      estado.perguntaAtual <= 1 ||
+                      estado.status === "finalizada"
+                    }
+                    className="rounded-lg border px-3 py-2.5 text-xs font-semibold hover:bg-slate-50 disabled:opacity-40"
                   >
                     <ArrowLeftCircle size={15} className="mx-auto mb-1" />
                     Anterior
                   </button>
 
                   <button
+                    type="button"
                     onClick={proximaPergunta}
-                    className="rounded-lg border px-3 py-2.5 text-xs font-semibold"
+                    disabled={estado.status === "finalizada"}
+                    className="rounded-lg border px-3 py-2.5 text-xs font-semibold hover:bg-slate-50 disabled:opacity-40"
                   >
                     <ArrowRight size={15} className="mx-auto mb-1" />
                     Próxima
@@ -551,8 +583,10 @@ function ControleContent() {
 
                 {configuracao.permitirPular && (
                   <button
+                    type="button"
                     onClick={pularPergunta}
-                    className="mt-2 w-full rounded-lg border border-dashed px-3 py-2.5 text-xs font-semibold"
+                    disabled={estado.status === "finalizada"}
+                    className="mt-2 w-full rounded-lg border border-dashed px-3 py-2.5 text-xs font-semibold hover:bg-slate-50 disabled:opacity-40"
                   >
                     <SkipForward size={15} className="mr-1 inline" />
                     Pular pergunta
@@ -562,8 +596,10 @@ function ControleContent() {
 
               {/* EQUIPE */}
               <button
+                type="button"
                 onClick={trocarEquipe}
-                className="w-full rounded-lg bg-slate-100 px-3 py-2.5 text-xs font-semibold hover:bg-slate-200"
+                disabled={estado.status === "finalizada"}
+                className="w-full rounded-lg bg-slate-100 px-3 py-2.5 text-xs font-semibold hover:bg-slate-200 disabled:opacity-40"
               >
                 Trocar equipe da vez
               </button>

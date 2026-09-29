@@ -3,7 +3,6 @@
 import { useParams } from "next/navigation";
 
 import Mascote from "@/components/telao/Mascote";
-import Placar from "@/components/telao/Placar";
 import Cronometro from "@/components/telao/Cronometro";
 import Question from "@/components/telao/Question";
 import TelaFinal from "@/components/telao/TelaFinal";
@@ -25,7 +24,7 @@ function TelaoContent() {
   if (carregando) {
     return (
       <main className="flex h-full min-h-screen items-center justify-center overflow-y-auto bg-slate-950 text-white">
-        <p className="text-sm text-slate-300">Carregando partida...</p>
+        <p>Carregando partida...</p>
       </main>
     );
   }
@@ -57,13 +56,11 @@ function TelaoContent() {
 
   if (!pergunta) {
     return (
-      <main className="flex h-full min-h-screen items-center justify-center overflow-y-auto bg-slate-950 px-4 text-white">
+      <main className="flex h-full min-h-screen items-center justify-center overflow-y-auto bg-slate-950 text-white">
         <div className="text-center">
-          <h1 className="text-2xl font-black sm:text-3xl">
-            Aguardando pergunta
-          </h1>
+          <h1 className="text-3xl font-black">Aguardando pergunta</h1>
 
-          <p className="mt-2 text-sm text-slate-400">
+          <p className="mt-2 text-slate-400">
             O apresentador ainda não selecionou uma pergunta.
           </p>
 
@@ -91,8 +88,7 @@ function TelaoContent() {
         </div>
       </header>
 
-      {/* CONTEÚDO */}
-      <section className="flex min-h-0 flex-1 flex-col gap-3 px-3 py-3 sm:px-5 sm:py-4 lg:px-8">
+      <section className="flex min-h-0 flex-1 flex-col gap-3 px-4 py-4 sm:px-6 lg:px-10">
         {/* MASCOTES + CRONÔMETRO */}
         <div className="flex shrink-0 items-center justify-center gap-3 sm:gap-6 lg:gap-12">
           <Mascote
@@ -105,7 +101,7 @@ function TelaoContent() {
           <div className="flex min-w-[90px] flex-col items-center justify-center">
             <Cronometro timeLeft={estado.tempoRestante} />
 
-            {/* Espaço permanente para evitar deslocamento */}
+            {/* Espaço permanente */}
             <div className="mt-1 flex h-4 items-center justify-center">
               <span
                 className={`text-[9px] font-bold uppercase tracking-widest transition-opacity ${
@@ -141,33 +137,8 @@ function TelaoContent() {
             respostaVisivel={estado.respostaVisivel}
           />
         </div>
-
-        {/* RESULTADO
-            O espaço sempre existe para não empurrar a pergunta. */}
-        <div className="flex h-[70px] shrink-0 items-center justify-center">
-          <div
-            className={`w-full max-w-2xl rounded-xl px-6 py-3 text-center transition-all duration-300 ${
-              estado.resultado
-                ? estado.resultado === "correta"
-                  ? "bg-green-500/10 text-green-300 ring-1 ring-green-500/30 opacity-100"
-                  : "bg-red-500/10 text-red-300 ring-1 ring-red-500/30 opacity-100"
-                : "pointer-events-none opacity-0"
-            }`}
-          >
-            <p className="text-[9px] font-black uppercase tracking-widest">
-              Resultado
-            </p>
-
-            <p className="mt-0.5 text-lg font-black sm:text-xl">
-              {estado.resultado === "correta"
-                ? "Resposta correta!"
-                : "Resposta incorreta"}
-            </p>
-          </div>
-        </div>
       </section>
 
-      {/* FOOTER */}
       <footer className="flex h-9 shrink-0 items-center justify-center border-t border-slate-800 px-5">
         <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-600 sm:text-[10px]">
           {partida.nome} • {new Date(partida.data).toLocaleDateString("pt-BR")}

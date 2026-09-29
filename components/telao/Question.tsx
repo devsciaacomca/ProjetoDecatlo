@@ -16,44 +16,42 @@ export default function Question({
   respostaVisivel,
 }: QuestionProps) {
   return (
-    <section className="flex min-h-0 w-full max-w-[1400px] flex-1 flex-col overflow-hidden rounded-2xl bg-white text-slate-900 shadow-2xl">
-      {/* CABEÇALHO FIXO */}{" "}
-      <header className="flex h-[58px] shrink-0 items-center justify-between gap-4 border-b border-slate-200 px-4 sm:px-6">
-        {" "}
+    <section className="flex min-h-0 w-full max-w-6xl flex-1 flex-col overflow-hidden rounded-3xl bg-white text-slate-900 shadow-2xl">
+      {/* CABEÇALHO */}
+      <header className="flex h-[70px] shrink-0 items-center justify-between gap-4 border-b border-slate-200 px-5 sm:px-7">
         <div className="flex min-w-0 items-center gap-3">
-          {" "}
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-950 text-sm font-black text-white">
-            {numero}{" "}
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-950 text-lg font-black text-white">
+            {numero}
           </div>
-          <div className="min-w-0">
-            <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">
+
+          <div>
+            <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
               Pergunta
             </p>
 
-            <p className="text-sm font-bold">
+            <p className="font-bold">
               {numero} de {total}
             </p>
           </div>
         </div>
-        <span className="max-w-[35%] truncate rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-600">
+
+        <span className="max-w-[35%] truncate rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-600">
           {pergunta.assunto}
         </span>
       </header>
-      {/* ÁREA CENTRAL */}
-      <div className="flex min-h-0 flex-1 flex-col px-4 py-4 sm:px-7">
-        {/* ENUNCIADO
-        Altura reservada para que as alternativas
-        não mudem de posição. */}
-        <div className="flex h-[25%] min-h-[100px] shrink-0 items-center justify-center">
-          <h1 className="max-w-5xl text-center text-[clamp(1.15rem,2.5vw,2.3rem)] font-black leading-tight">
+
+      {/* CONTEÚDO */}
+      <div className="flex min-h-0 flex-1 flex-col px-5 py-4 sm:px-8">
+        {/* ENUNCIADO */}
+        <div className="flex min-h-[150px] shrink-0 items-center justify-center">
+          <h1 className="max-w-5xl text-center text-[clamp(1.25rem,2.5vw,2.5rem)] font-black leading-tight">
             {pergunta.enunciado}
           </h1>
         </div>
 
-        {/* ALTERNATIVAS
-        Sempre ocupam a mesma área. */}
+        {/* ALTERNATIVAS */}
         {pergunta.tipo === "objetiva" && pergunta.alternativas ? (
-          <div className="grid min-h-0 flex-1 grid-cols-1 grid-rows-4 gap-2.5 py-2 sm:grid-cols-2 sm:grid-rows-2">
+          <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 py-3 md:grid-cols-2 lg:grid-cols-3">
             {pergunta.alternativas.map((alternativa, index) => {
               const correta =
                 respostaVisivel &&
@@ -62,14 +60,14 @@ export default function Question({
               return (
                 <div
                   key={alternativa.id}
-                  className={`flex min-h-0 items-center gap-3 overflow-hidden rounded-xl border-2 px-4 py-3 transition-colors duration-300 ${
+                  className={`flex min-h-[72px] items-center gap-4 rounded-2xl border-2 px-5 py-4 transition-colors duration-300 ${
                     correta
                       ? "border-green-500 bg-green-50"
                       : "border-slate-200 bg-slate-50"
                   }`}
                 >
                   <div
-                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-black ${
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-lg font-black ${
                       correta
                         ? "bg-green-500 text-white"
                         : "bg-slate-950 text-white"
@@ -78,7 +76,7 @@ export default function Question({
                     {String.fromCharCode(65 + index)}
                   </div>
 
-                  <span className="min-w-0 overflow-hidden text-ellipsis text-[clamp(.75rem,1.35vw,1.1rem)] font-bold leading-snug">
+                  <span className="min-w-0 text-lg font-bold leading-snug">
                     {alternativa.texto}
                   </span>
                 </div>
@@ -87,33 +85,32 @@ export default function Question({
           </div>
         ) : (
           <div className="flex min-h-0 flex-1 items-center justify-center">
-            <div className="rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 px-8 py-6 text-center">
+            <div className="rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 px-8 py-6 text-center">
               <p className="font-bold text-slate-400">Pergunta aberta</p>
             </div>
           </div>
         )}
 
-        {/* ÁREA INFERIOR FIXA
-        Sempre ocupa espaço mesmo quando a resposta
-        ainda não foi revelada. */}
-        <div className="mt-2 flex h-[110px] shrink-0 items-center justify-center">
+        {/* ÁREA RESERVADA PARA RESPOSTA */}
+        <div className="mt-3 flex h-[115px] shrink-0 items-center justify-center">
           <div
-            className={`w-full max-w-5xl rounded-xl px-4 py-3 text-center transition-all duration-300 ${
+            className={`w-full max-w-5xl rounded-2xl px-5 py-3 text-center transition-opacity duration-300 ${
               respostaVisivel
                 ? "bg-green-100 opacity-100"
                 : "pointer-events-none opacity-0"
             }`}
           >
-            <p className="text-[9px] font-bold uppercase tracking-widest text-green-700">
+            <p className="text-xs font-black uppercase tracking-widest text-green-700">
               Resposta correta
             </p>
 
-            <p className="mt-1 text-[clamp(.85rem,1.4vw,1.15rem)] font-black text-green-900">
+            <p className="mt-1 text-lg font-black text-green-900">
               {pergunta.respostaCorreta}
             </p>
 
-            <div className="mt-1 min-h-[24px]">
-              <p className="mx-auto max-w-4xl text-xs leading-relaxed text-green-900 sm:text-sm">
+            {/* Espaço permanente para explicação */}
+            <div className="mt-1 min-h-[28px]">
+              <p className="mx-auto max-w-4xl text-sm leading-relaxed text-green-900">
                 {pergunta.explicacao || "\u00A0"}
               </p>
             </div>

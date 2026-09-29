@@ -158,13 +158,15 @@ function aplicarAcao(estado: EstadoJogo, action: GameAction): EstadoJogo {
     case "DEFINIR_EQUIPE":
       return { ...estado, equipeDaVez: action.equipeDaVez };
     case "RESPONDER":
+      const isCorreta = action.resultado === "correta";
       return {
         ...estado,
         pontos: action.pontos,
         resultado: action.resultado,
-        respostaVisivel: true,
+        respostaVisivel: isCorreta,
         cronometroFimEm: null,
         status: "pausada",
+        equipeDaVez: isCorreta ? estado.equipeDaVez : (estado.equipeDaVez === "A" ? "B" : "A"),
       };
     case "ADICIONAR_PONTO":
     case "REMOVER_PONTO":

@@ -2,10 +2,12 @@ export default function Mascote({
   nome,
   video,
   ativo,
+  pontos,
 }: {
   nome: string;
   video: string;
   ativo: boolean;
+  pontos: number;
 }) {
   return (
     <div
@@ -25,13 +27,16 @@ export default function Mascote({
         loop
         muted
         playsInline
-        className="h-48 w-60 object-cover sm:h-56 sm:w-72 lg:h-64 lg:w-80"
+        className="h-56 w-64 object-cover sm:h-64 sm:w-80 lg:h-72 lg:w-96"
       />
 
-      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/95 via-black/50 to-transparent px-4 pb-4 pt-12">
-        <p className="text-center text-xl font-black uppercase tracking-wide text-white sm:text-2xl">
+      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/80 to-transparent px-4 pb-6 pt-16 flex flex-col items-center">
+        <p className="text-center text-xl font-black uppercase tracking-wide text-white sm:text-2xl drop-shadow-md">
           {nome}
         </p>
+        <div className="mt-2 rounded-xl bg-black/60 px-6 py-2 backdrop-blur-sm border border-white/10">
+          <p className="text-center text-4xl font-black text-yellow-400 sm:text-5xl drop-shadow-[0_2px_10px_rgba(250,204,21,0.5)]">{pontos}</p>
+        </div>
       </div>
 
       {ativo && (

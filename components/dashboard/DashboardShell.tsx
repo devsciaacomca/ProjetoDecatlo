@@ -14,14 +14,14 @@ export default function DashboardShell({
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <main className="min-h-screen bg-slate-100 text-slate-900">
-      <div className="flex min-h-screen">
+    <main className="h-[100dvh] bg-slate-100 text-slate-900 overflow-hidden flex flex-col">
+      <div className="flex flex-1 h-full overflow-hidden">
         <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-        <section className="flex min-w-0 flex-1 flex-col">
+        <section className="flex min-w-0 flex-1 flex-col h-full overflow-hidden">
           <Header onMenuClick={() => setSidebarOpen(true)} />
 
-          <main className="flex-1">{children}</main>
+          <main className="flex-1 overflow-y-auto">{children}</main>
 
           <Footer />
         </section>

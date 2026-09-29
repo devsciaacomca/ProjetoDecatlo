@@ -49,36 +49,58 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const perguntas = await prisma.pergunta.findMany({
-      where: termo
-        ? {
-            OR: [
-              {
-                assunto: {
-                  contains: termo,
-                  mode: "insensitive",
-                },
+    const pagina = Math.max(Number(url.searchParams.get("pagina") ?? "1") || 1, 1);
+    const porPagina = Math.max(Number(url.searchParams.get("porPagina") ?? "20") || 20, 1);
+    const ordenarPor = url.searchParams.get("ordenarPor") ?? "id";
+    const ordem = url.searchParams.get("ordem") === "asc" ? "asc" : "desc";
+
+    const skip = (pagina - 1) * porPagina;
+
+    const where = termo
+      ? {
+          OR: [
+            {
+              assunto: {
+                contains: termo,
+                mode: "insensitive" as const,
               },
-              {
-                enunciado: {
-                  contains: termo,
-                  mode: "insensitive",
-                },
+            },
+            {
+              enunciado: {
+                contains: termo,
+                mode: "insensitive" as const,
               },
-            ],
-          }
-        : undefined,
+            },
+          ],
+        }
+      : {};
 
-      include: {
-        alternativas: true,
+    const [total, perguntas] = await Promise.all([
+      prisma.pergunta.count({ where }),
+      prisma.pergunta.findMany({
+        where,
+        skip,
+        take: porPagina,
+        include: {
+          alternativas: true,
+        },
+        orderBy: {
+          [ordenarPor]: ordem,
+        },
+      }),
+    ]);
+
+    const totalPaginas = Math.max(Math.ceil(total / porPagina), 1);
+
+    return successResponse({
+      registros: perguntas,
+      paginacao: {
+        pagina,
+        porPagina,
+        total,
+        totalPaginas,
       },
-
-      orderBy: {
-        id: "desc",
-      },
-    });
-
-    return successResponse(perguntas, "Perguntas carregadas com sucesso");
+    }, "Perguntas carregadas com sucesso");
   } catch (error) {
     console.error("Erro ao buscar perguntas:", error);
 

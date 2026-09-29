@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Plus, Gamepad2, PlayCircle, Search, ArrowRight } from "lucide-react";
+import { useUser } from "@/contexts/UserContext";
 
 type PartidaStatus = "configuracao" | "pronta" | "em_andamento" | "finalizada";
 
@@ -43,6 +44,8 @@ const statusConfig: Record<
 };
 
 export default function PartidasPage() {
+  const { user } = useUser();
+  const podeCriarPartidas = user?.role !== "Apresentador";
   const [partidas, setPartidas] = useState<Partida[]>([]);
   const [busca, setBusca] = useState("");
   const [filtroStatus, setFiltroStatus] = useState<"todas" | Partida["status"]>(
@@ -105,13 +108,15 @@ export default function PartidasPage() {
             </p>
           </div>
 
-          <Link
-            href="/dashboard/partidas/nova"
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800"
-          >
-            <Plus size={18} />
-            Nova partida
-          </Link>
+          {podeCriarPartidas && (
+            <Link
+              href="/dashboard/partidas/nova"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+            >
+              <Plus size={18} />
+              Nova partida
+            </Link>
+          )}
         </div>
 
         {partidaEmAndamento && (

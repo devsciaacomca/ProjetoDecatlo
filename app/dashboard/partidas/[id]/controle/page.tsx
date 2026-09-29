@@ -2,20 +2,31 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
+
 import {
   ArrowLeft,
+  ArrowLeftCircle,
+  ArrowRight,
+  Check,
+  Eye,
+  EyeOff,
   Minus,
   Monitor,
   Pause,
   Play,
   Plus,
   Radio,
+  RotateCcw,
+  SkipForward,
   Square,
+  X,
 } from "lucide-react";
+
 import { GameProvider, useGame } from "@/contexts/GameContext";
 
 function ControleContent() {
   const params = useParams<{ id: string }>();
+
   const {
     partida,
     pergunta,
@@ -24,21 +35,28 @@ function ControleContent() {
     sincronizado,
     carregando,
     erro,
+
     iniciarPartida,
     pausarPartida,
     finalizarPartida,
+
     iniciarCronometro,
     pausarCronometro,
     reiniciarCronometro,
+
     proximaPergunta,
     perguntaAnterior,
     pularPergunta,
+
     trocarEquipe,
     definirEquipe,
+
     adicionarPonto,
     removerPonto,
+
     selecionarResposta,
     avaliarResposta,
+
     mostrarResposta,
     esconderResposta,
   } = useGame();
@@ -63,52 +81,66 @@ function ControleContent() {
 
   const equipeDaVez =
     estado.equipeDaVez === "A" ? partida.equipe1 : partida.equipe2;
+
   const progresso =
     configuracao.totalPerguntas > 0
       ? Math.round((estado.perguntaAtual / configuracao.totalPerguntas) * 100)
       : 0;
 
+  const cronometroRodando =
+    estado.cronometroFimEm !== null && estado.status === "em_andamento";
+
   return (
     <main className="flex-1 p-4 sm:p-6 lg:p-8">
       <div className="mx-auto w-full max-w-7xl">
-        <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        {/* HEADER */}
+        <header className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <Link
               href={`/dashboard/partidas/${params.id}`}
-              className="mb-3 inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900"
+              className="mb-2 inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900"
             >
-              <ArrowLeft size={16} /> Voltar para partida
+              <ArrowLeft size={16} />
+              Voltar para partida
             </Link>
+
             <h1 className="text-xl font-semibold sm:text-2xl">
               Controle da partida
             </h1>
+
             <p className="mt-1 text-sm text-slate-500">{partida.nome}</p>
           </div>
+
           <div className="flex flex-wrap gap-2">
             <div className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm">
               <Radio
                 size={16}
                 className={sincronizado ? "text-green-600" : "text-slate-400"}
               />
+
               {sincronizado ? "Telão conectado" : "Aguardando telão"}
             </div>
+
             <Link
               href={`/telao/${params.id}`}
               target="_blank"
               className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold hover:bg-slate-50"
             >
-              <Monitor size={17} /> Abrir telão
+              <Monitor size={17} />
+              Abrir telão
             </Link>
           </div>
         </header>
 
-        <section className="mb-5 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        {/* STATUS */}
+        <section className="mb-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
                 Status
               </p>
-              <p className="mt-2 font-semibold">
+
+              <p className="mt-1 font-semibold">
                 {estado.status === "em_andamento"
                   ? "Partida em andamento"
                   : estado.status === "pausada"
@@ -118,6 +150,7 @@ function ControleContent() {
                       : "Aguardando início"}
               </p>
             </div>
+
             <div className="flex flex-wrap gap-2">
               {estado.status !== "em_andamento" &&
                 estado.status !== "finalizada" && (
@@ -125,42 +158,51 @@ function ControleContent() {
                     onClick={iniciarPartida}
                     className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white"
                   >
-                    <Play size={16} /> Iniciar partida
+                    <Play size={16} />
+                    Iniciar partida
                   </button>
                 )}
+
               {estado.status === "em_andamento" && (
                 <button
                   onClick={pausarPartida}
                   className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-semibold"
                 >
-                  <Pause size={16} /> Pausar partida
+                  <Pause size={16} />
+                  Pausar partida
                 </button>
               )}
+
               {estado.status !== "finalizada" && (
                 <button
                   onClick={finalizarPartida}
                   className="inline-flex items-center gap-2 rounded-lg border border-red-200 px-4 py-2.5 text-sm font-semibold text-red-600"
                 >
-                  <Square size={15} /> Finalizar
+                  <Square size={15} />
+                  Finalizar
                 </button>
               )}
             </div>
           </div>
         </section>
 
-        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        {/* PROGRESSO */}
+        <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-sm text-slate-500">Progresso</p>
+
               <p className="mt-1 text-lg font-semibold">
                 Pergunta {estado.perguntaAtual} de {configuracao.totalPerguntas}
               </p>
             </div>
+
             <div className="w-full sm:w-72">
               <div className="mb-2 flex justify-between text-xs text-slate-500">
                 <span>Progresso</span>
                 <span>{progresso}%</span>
               </div>
+
               <div className="h-2 overflow-hidden rounded-full bg-slate-200">
                 <div
                   className="h-full bg-slate-900 transition-all"
@@ -171,38 +213,50 @@ function ControleContent() {
           </div>
         </section>
 
-        <section className="mt-5 grid gap-4 sm:grid-cols-2">
+        {/* EQUIPES */}
+        <section className="mt-4 grid gap-3 sm:grid-cols-2">
           {(["A", "B"] as const).map((equipe) => {
             const nome = equipe === "A" ? partida.equipe1 : partida.equipe2;
+
             const pontos =
               equipe === "A" ? estado.pontos.equipe1 : estado.pontos.equipe2;
+
             return (
               <div
                 key={equipe}
-                className={`rounded-xl border p-5 shadow-sm ${estado.equipeDaVez === equipe ? "border-slate-900 bg-slate-50" : "border-slate-200 bg-white"}`}
+                className={`rounded-xl border p-4 shadow-sm ${
+                  estado.equipeDaVez === equipe
+                    ? "border-slate-900 bg-slate-50"
+                    : "border-slate-200 bg-white"
+                }`}
               >
                 <div className="flex items-center justify-between">
                   <p className="font-semibold">{nome}</p>
+
                   {estado.equipeDaVez === equipe && (
                     <span className="rounded-full bg-slate-900 px-2.5 py-1 text-xs font-semibold text-white">
                       Vez
                     </span>
                   )}
                 </div>
-                <p className="mt-2 text-4xl font-bold">{pontos}</p>
-                <div className="mt-4 flex gap-2">
+
+                <p className="mt-2 text-3xl font-bold">{pontos}</p>
+
+                <div className="mt-3 flex gap-2">
                   <button
                     onClick={() => removerPonto(equipe)}
                     className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300"
                   >
                     <Minus size={16} />
                   </button>
+
                   <button
                     onClick={() => adicionarPonto(equipe)}
                     className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-white"
                   >
                     <Plus size={16} />
                   </button>
+
                   <button
                     onClick={() => definirEquipe(equipe)}
                     className="ml-2 rounded-lg border border-slate-300 px-3 text-xs font-semibold"
@@ -215,7 +269,7 @@ function ControleContent() {
           })}
         </section>
 
-<<<<<<< HEAD
+        {/* PERGUNTA + CONTROLES */}
         <section className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
           {/* PERGUNTA */}
           <div className="min-w-0 rounded-xl border border-slate-200 bg-white shadow-sm">
@@ -226,9 +280,11 @@ function ControleContent() {
                     Pergunta {estado.perguntaAtual}
                   </span>
 
-                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs">
-                    {pergunta?.assunto}
-                  </span>
+                  {pergunta && (
+                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs">
+                      {pergunta.assunto}
+                    </span>
+                  )}
                 </div>
 
                 <p className="mt-1 truncate text-sm font-semibold">
@@ -250,12 +306,14 @@ function ControleContent() {
             <div className="p-4">
               {pergunta ? (
                 <>
+                  {/* ENUNCIADO */}
                   <div className="rounded-lg bg-slate-50 p-4">
                     <p className="text-base font-semibold leading-6 sm:text-lg">
                       {pergunta.enunciado}
                     </p>
                   </div>
 
+                  {/* ALTERNATIVAS */}
                   {pergunta.tipo === "objetiva" && pergunta.alternativas && (
                     <div className="mt-3 grid gap-2 sm:grid-cols-2">
                       {pergunta.alternativas.map((alternativa, index) => {
@@ -271,6 +329,7 @@ function ControleContent() {
                             onClick={() =>
                               selecionarResposta(alternativa.texto)
                             }
+                            disabled={estado.status === "finalizada"}
                             className={`flex min-h-12 items-center gap-3 rounded-lg border px-3 py-2 text-left transition ${
                               selecionada
                                 ? "border-blue-600 bg-blue-50 ring-2 ring-blue-100"
@@ -298,7 +357,7 @@ function ControleContent() {
 
                   {/* AVALIAÇÃO */}
                   <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
-                    <div className="mb-2 flex items-center justify-between">
+                    <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                       <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
                         Avaliar resposta
                       </p>
@@ -315,23 +374,25 @@ function ControleContent() {
                         type="button"
                         disabled={!estado.respostaSelecionada}
                         onClick={() => avaliarResposta("correta")}
-                        className="rounded-lg bg-green-600 px-3 py-2.5 text-sm font-bold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-40"
+                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-green-600 px-3 py-2.5 text-sm font-bold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-40"
                       >
-                        ✓ Correta
+                        <Check size={16} />
+                        Correta
                       </button>
 
                       <button
                         type="button"
                         disabled={!estado.respostaSelecionada}
                         onClick={() => avaliarResposta("incorreta")}
-                        className="rounded-lg bg-red-600 px-3 py-2.5 text-sm font-bold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-40"
+                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 px-3 py-2.5 text-sm font-bold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-40"
                       >
-                        ✕ Errada
+                        <X size={16} />
+                        Errada
                       </button>
                     </div>
                   </div>
 
-                  {/* GABARITO SOMENTE NO CONTROLE */}
+                  {/* GABARITO */}
                   <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
                     <div className="flex items-center justify-between gap-3">
                       <div className="min-w-0">
@@ -360,19 +421,22 @@ function ControleContent() {
                     </div>
                   </div>
 
-                  {estado.resultado && (
-                    <div
-                      className={`mt-3 rounded-lg p-3 text-center text-sm font-bold ${
-                        estado.resultado === "correta"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {estado.resultado === "correta"
-                        ? `${equipeDaVez} acertou!`
-                        : "Resposta errada — vez da outra equipe"}
-                    </div>
-                  )}
+                  {/* RESULTADO */}
+                  <div className="mt-3 min-h-[44px]">
+                    {estado.resultado && (
+                      <div
+                        className={`rounded-lg p-3 text-center text-sm font-bold ${
+                          estado.resultado === "correta"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {estado.resultado === "correta"
+                          ? "Resposta correta!"
+                          : "Resposta errada — vez da outra equipe"}
+                      </div>
+                    )}
+                  </div>
                 </>
               ) : (
                 <div className="p-8 text-center text-sm text-slate-500">
@@ -382,9 +446,11 @@ function ControleContent() {
             </div>
           </div>
 
+          {/* CONTROLES */}
           <aside className="h-fit rounded-xl border border-slate-200 bg-white shadow-sm">
             <div className="border-b border-slate-200 px-4 py-3">
               <h2 className="text-sm font-bold">Controles</h2>
+
               <p className="text-xs text-slate-500">
                 Controle rápido da partida
               </p>
@@ -397,42 +463,25 @@ function ControleContent() {
                   Cronômetro
                 </p>
 
-                <div className="flex items-center gap-2">
+                <div className="flex gap-2">
+                  {/* UM ÚNICO BOTÃO PLAY/PAUSE */}
                   <button
                     type="button"
                     onClick={
-                      estado.cronometroFimEm !== null
-                        ? pausarCronometro
-                        : iniciarCronometro
+                      cronometroRodando ? pausarCronometro : iniciarCronometro
                     }
                     disabled={estado.status === "finalizada"}
                     className="flex h-10 flex-1 items-center justify-center rounded-lg bg-slate-900 text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
                     title={
-                      estado.cronometroFimEm !== null
+                      cronometroRodando
                         ? "Pausar cronômetro"
                         : "Iniciar cronômetro"
                     }
                   >
-                    {estado.cronometroFimEm !== null ? (
-                      // Pause
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        className="h-5 w-5"
-                      >
-                        <path d="M6 5h4v14H6zM14 5h4v14h-4z" />
-                      </svg>
+                    {cronometroRodando ? (
+                      <Pause size={17} />
                     ) : (
-                      // Play
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        className="h-5 w-5"
-                      >
-                        <path d="M8 5.14v13.72L19 12 8 5.14z" />
-                      </svg>
+                      <Play size={17} />
                     )}
                   </button>
 
@@ -440,185 +489,86 @@ function ControleContent() {
                     type="button"
                     onClick={reiniciarCronometro}
                     disabled={estado.status === "finalizada"}
-                    className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-300 hover:bg-slate-50 disabled:opacity-40"
                     title="Reiniciar cronômetro"
                   >
-                    ↻
+                    <RotateCcw size={16} />
                   </button>
                 </div>
               </div>
 
-              {/* NAVEGAÇÃO */}
+              {/* TELÃO */}
               <div>
                 <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-500">
-                  Navegação
+                  Exibição
                 </p>
 
-                <div className="grid grid-cols-2 gap-1.5">
+                <button
+                  type="button"
+                  onClick={
+                    estado.respostaVisivel ? esconderResposta : mostrarResposta
+                  }
+                  className="flex w-full items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-xs font-semibold hover:bg-slate-50"
+                >
+                  {estado.respostaVisivel ? (
+                    <>
+                      <EyeOff size={15} />
+                      Esconder resposta
+                    </>
+                  ) : (
+                    <>
+                      <Eye size={15} />
+                      Mostrar resposta
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* PERGUNTAS */}
+              <div>
+                <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                  Perguntas
+                </p>
+
+                <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={perguntaAnterior}
                     disabled={estado.perguntaAtual <= 1}
-                    className="rounded-lg border px-2 py-2 text-xs font-semibold disabled:opacity-40"
+                    className="rounded-lg border px-3 py-2.5 text-xs font-semibold disabled:opacity-40"
                   >
-                    ← Anterior
+                    <ArrowLeftCircle size={15} className="mx-auto mb-1" />
+                    Anterior
                   </button>
 
                   <button
                     onClick={proximaPergunta}
-                    className="rounded-lg bg-slate-900 px-2 py-2 text-xs font-semibold text-white"
+                    className="rounded-lg border px-3 py-2.5 text-xs font-semibold"
                   >
-                    Próxima →
+                    <ArrowRight size={15} className="mx-auto mb-1" />
+                    Próxima
                   </button>
                 </div>
 
                 {configuracao.permitirPular && (
                   <button
                     onClick={pularPergunta}
-                    className="mt-1.5 w-full rounded-lg border border-dashed px-2 py-2 text-xs font-semibold"
+                    className="mt-2 w-full rounded-lg border border-dashed px-3 py-2.5 text-xs font-semibold"
                   >
+                    <SkipForward size={15} className="mr-1 inline" />
                     Pular pergunta
                   </button>
                 )}
               </div>
 
               {/* EQUIPE */}
-              <div>
-                <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-500">
-                  Equipe da vez
-                </p>
-
-                <div className="grid grid-cols-2 gap-1.5">
-                  {(["A", "B"] as const).map((equipe) => (
-                    <button
-                      key={equipe}
-                      onClick={() => definirEquipe(equipe)}
-                      className={`rounded-lg px-2 py-2 text-xs font-bold ${
-                        estado.equipeDaVez === equipe
-                          ? "bg-slate-900 text-white"
-                          : "border border-slate-200 hover:bg-slate-50"
-                      }`}
-                    >
-                      Equipe {equipe}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* PONTUAÇÃO */}
-              <div>
-                <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-500">
-                  Pontuação
-                </p>
-
-                <div className="grid grid-cols-2 gap-2">
-                  {(["A", "B"] as const).map((equipe) => {
-                    const pontos =
-                      equipe === "A"
-                        ? estado.pontos.equipe1
-                        : estado.pontos.equipe2;
-
-                    return (
-                      <div
-                        key={equipe}
-                        className="rounded-lg border border-slate-200 p-2"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold">
-                            {equipe === "A" ? partida.equipe1 : partida.equipe2}
-                          </span>
-
-                          <span className="text-lg font-black">{pontos}</span>
-                        </div>
-
-                        <div className="mt-1.5 grid grid-cols-2 gap-1">
-                          <button
-                            onClick={() => removerPonto(equipe)}
-                            className="rounded border py-1 text-xs font-bold hover:bg-slate-50"
-                          >
-                            −
-                          </button>
-
-                          <button
-                            onClick={() => adicionarPonto(equipe)}
-                            className="rounded bg-slate-900 py-1 text-xs font-bold text-white"
-                          >
-                            +
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* TROCAR EQUIPE */}
               <button
                 onClick={trocarEquipe}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold hover:bg-slate-50"
+                className="w-full rounded-lg bg-slate-100 px-3 py-2.5 text-xs font-semibold hover:bg-slate-200"
               >
-                ⇄ Trocar equipe
+                Trocar equipe da vez
               </button>
             </div>
           </aside>
-=======
-        <section className="mt-5 grid gap-5 lg:grid-cols-3">
-          <div className="rounded-xl border border-slate-200 bg-white shadow-sm lg:col-span-2">
-            <div className="border-b border-slate-200 px-6 py-5 flex items-center justify-between"><div><p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Pergunta {estado.perguntaAtual}</p><p className="mt-1 text-sm font-semibold">Equipe da vez: {equipeDaVez}</p></div><div className="rounded-lg bg-slate-100 px-4 py-2 text-center"><p className="text-xs text-slate-500">Tempo</p><p className="text-2xl font-bold tabular-nums">{estado.tempoRestante}s</p></div></div>
-            <div className="p-6">
-              {pergunta ? <><div className="rounded-xl bg-slate-50 p-6"><div className="mb-3 flex flex-wrap gap-2"><span className="rounded-full bg-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-600">{pergunta.assunto}</span><span className="rounded-full bg-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-600">{pergunta.tipo}</span></div><p className="text-lg font-semibold leading-8">{pergunta.enunciado}</p></div>
-                {pergunta.tipo === "objetiva" && pergunta.alternativas && <div className="mt-6 grid gap-3 sm:grid-cols-2">{pergunta.alternativas.map((a, i) => {
-                  const isRespondida = estado.resultado !== null;
-                  const letra = String.fromCharCode(65 + i);
-                  const isCorreta = letra === pergunta.respostaCorreta || a.texto.trim().toLowerCase() === pergunta.respostaCorreta.trim().toLowerCase();
-                  
-                  return (
-                    <button 
-                      key={a.id} 
-                      disabled={isRespondida || estado.status !== "em_andamento"}
-                      onClick={() => responder(isCorreta ? "correta" : "incorreta")}
-                      className={`flex items-center text-left rounded-lg border p-4 transition-colors ${
-                        estado.status !== "em_andamento" ? "opacity-60 cursor-not-allowed border-slate-200" :
-                        isRespondida ? (isCorreta && estado.respostaVisivel ? "bg-green-100 border-green-300 text-green-900" : "bg-slate-50 border-slate-200") : 
-                        "border-slate-300 hover:bg-slate-50 hover:border-slate-400 bg-white"
-                      }`}
-                    >
-                      <span className={`mr-3 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${isRespondida && isCorreta && estado.respostaVisivel ? "bg-green-200 text-green-900" : "bg-slate-100 text-slate-700"}`}>
-                        {letra}
-                      </span>
-                      <span>{a.texto}</span>
-                    </button>
-                  );
-                })}</div>}
-                {pergunta.tipo === "aberta" && (
-                  <div className="mt-6 flex gap-3">
-                    <button 
-                      onClick={() => responder("correta")} 
-                      disabled={estado.resultado !== null || estado.status !== "em_andamento"}
-                      className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <Check size={16} /> Correta
-                    </button>
-                    <button 
-                      onClick={() => responder("incorreta")} 
-                      disabled={estado.resultado !== null || estado.status !== "em_andamento"}
-                      className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <X size={16} /> Incorreta
-                    </button>
-                  </div>
-                )}
-                {estado.respostaVisivel && <div className="mt-6 rounded-xl border border-green-200 bg-green-50 p-5"><p className="text-xs font-bold uppercase tracking-wide text-green-700">Resposta correta</p><p className="mt-1 font-bold text-green-900">{pergunta.respostaCorreta}</p>{configuracao.mostrarExplicacao && pergunta.explicacao && <p className="mt-3 text-sm text-green-900">{pergunta.explicacao}</p>}</div>}
-              </> : <div className="rounded-xl bg-slate-50 p-8 text-center text-sm text-slate-500">Nenhuma pergunta encontrada para esta posição.</div>}
-            </div>
-          </div>
-
-          <aside className="rounded-xl border border-slate-200 bg-white shadow-sm"><div className="border-b border-slate-200 px-5 py-5"><h2 className="font-semibold">Controles</h2><p className="mt-1 text-sm text-slate-500">Ações do apresentador.</p></div><div className="space-y-4 p-5">
-            <div><p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Cronômetro</p><div className="grid grid-cols-3 gap-2"><button onClick={iniciarCronometro} disabled={estado.status === "finalizada"} className="rounded-lg bg-slate-900 px-2 py-3 text-white"><Play size={16} className="mx-auto"/></button><button onClick={pausarCronometro} disabled={estado.cronometroFimEm === null} className="rounded-lg border px-2 py-3"><Pause size={16} className="mx-auto"/></button><button onClick={reiniciarCronometro} disabled={estado.status === "finalizada"} className="rounded-lg border px-2 py-3"><RotateCcw size={16} className="mx-auto"/></button></div></div>
-            <div><p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Exibição Telão</p><div className="grid grid-cols-2 gap-2"><button onClick={mostrarResposta} className="rounded-lg border px-3 py-2 text-xs font-semibold hover:bg-slate-50"><Eye size={15} className="mr-1 inline"/>Mostrar Resposta</button><button onClick={esconderResposta} className="rounded-lg border px-3 py-2 text-xs font-semibold hover:bg-slate-50"><EyeOff size={15} className="mr-1 inline"/>Esconder Resposta</button></div></div>
-            <div><p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Perguntas</p><div className="grid grid-cols-2 gap-2"><button onClick={perguntaAnterior} disabled={estado.perguntaAtual <= 1} className="rounded-lg border px-3 py-3 text-sm font-semibold disabled:opacity-40"><ArrowLeftCircle size={16} className="mx-auto mb-1"/>Anterior</button><button onClick={proximaPergunta} className="rounded-lg border px-3 py-3 text-sm font-semibold"><ArrowRight size={16} className="mx-auto mb-1"/>Próxima</button></div>{configuracao.permitirPular && <button onClick={pularPergunta} className="mt-2 w-full rounded-lg border border-dashed px-3 py-2.5 text-sm font-semibold"><SkipForward size={15} className="mr-1 inline"/>Pular pergunta</button>}</div>
-            <button onClick={trocarEquipe} className="w-full rounded-lg bg-slate-100 px-3 py-2.5 text-sm font-semibold hover:bg-slate-200">Trocar equipe da vez</button>
-          </div></aside>
->>>>>>> main
         </section>
       </div>
     </main>
@@ -627,6 +577,7 @@ function ControleContent() {
 
 export default function ControlePage() {
   const params = useParams<{ id: string }>();
+
   return (
     <GameProvider partidaId={params.id} role="control">
       <ControleContent />

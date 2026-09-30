@@ -3,6 +3,7 @@
 import { useParams } from "next/navigation";
 
 import Mascote from "@/components/telao/Mascote";
+import Placar from "@/components/telao/Placar";
 import Cronometro from "@/components/telao/Cronometro";
 import Question from "@/components/telao/Question";
 import TelaFinal from "@/components/telao/TelaFinal";
@@ -23,16 +24,18 @@ function TelaoContent() {
 
   if (carregando) {
     return (
-      <main className="flex h-full min-h-screen items-center justify-center overflow-y-auto bg-slate-950 text-white">
-        <p>Carregando partida...</p>
+      <main className="flex h-screen items-center justify-center overflow-hidden bg-slate-950 text-white">
+        {" "}
+        <p className="text-sm text-slate-300">Carregando partida... </p>{" "}
       </main>
     );
   }
 
   if (erro) {
     return (
-      <main className="flex h-full min-h-screen items-center justify-center overflow-y-auto bg-slate-950 text-white">
-        <p className="text-red-300">{erro}</p>
+      <main className="flex h-screen items-center justify-center overflow-hidden bg-slate-950 text-white">
+        {" "}
+        <p className="text-red-300">{erro}</p>{" "}
       </main>
     );
   }
@@ -56,14 +59,16 @@ function TelaoContent() {
 
   if (!pergunta) {
     return (
-      <main className="flex h-full min-h-screen items-center justify-center overflow-y-auto bg-slate-950 text-white">
+      <main className="flex h-screen items-center justify-center overflow-hidden bg-slate-950 px-4 text-white">
+        {" "}
         <div className="text-center">
-          <h1 className="text-3xl font-black">Aguardando pergunta</h1>
-
-          <p className="mt-2 text-slate-400">
+          {" "}
+          <h1 className="text-2xl font-black sm:text-3xl">
+            Aguardando pergunta{" "}
+          </h1>
+          <p className="mt-2 text-sm text-slate-400">
             O apresentador ainda não selecionou uma pergunta.
           </p>
-
           <p className="mt-4 text-xs text-slate-600">
             {sincronizado ? "Sincronizado" : "Aguardando controlador"}
           </p>
@@ -76,21 +81,24 @@ function TelaoContent() {
     estado.status === "pausada" && estado.tempoRestante > 0;
 
   return (
-    <main className="flex h-full min-h-screen flex-col overflow-hidden bg-slate-950 text-white">
+    <main className="flex h-screen min-h-0 flex-col overflow-hidden bg-slate-950 text-white">
       {/* HEADER */}
-      <header className="flex shrink-0 items-center justify-center border-b border-slate-800 px-5 py-4 sm:px-8">
-        <div className="text-center">
-          <p className="text-xs font-bold uppercase tracking-[0.3em] text-yellow-400">
+      <header className="flex shrink-0 items-center justify-center border-b border-slate-800 px-4 py-2 sm:px-6 lg:py-3">
+        <div className="text-center leading-tight">
+          <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-yellow-400 sm:text-[10px]">
             Decatlo
           </p>
 
-          <h1 className="text-xl font-black sm:text-2xl">{partida.nome}</h1>
+          <h1 className="text-base font-black sm:text-lg lg:text-xl">
+            {partida.nome}
+          </h1>
         </div>
       </header>
 
-      <section className="flex min-h-0 flex-1 flex-col gap-3 px-4 py-4 sm:px-6 lg:px-10">
-        {/* MASCOTES + CRONÔMETRO */}
-        <div className="flex shrink-0 items-center justify-center gap-3 sm:gap-6 lg:gap-12">
+      {/* CONTEÚDO */}
+      <section className="flex min-h-0 flex-1 flex-col overflow-hidden px-3 py-2 sm:px-5 sm:py-3 lg:px-8">
+        {/* MASCOTES / CRONÔMETRO */}
+        <div className="flex shrink-0 items-center justify-center gap-2 sm:gap-5 lg:gap-10">
           <Mascote
             nome={partida.equipe1}
             video="/videos/mascote-alfa1.mp4"
@@ -98,13 +106,13 @@ function TelaoContent() {
             pontos={estado.pontos.equipe1}
           />
 
-          <div className="flex min-w-[90px] flex-col items-center justify-center">
+          <div className="flex shrink-0 flex-col items-center justify-center">
             <Cronometro timeLeft={estado.tempoRestante} />
 
-            {/* Espaço permanente */}
-            <div className="mt-1 flex h-4 items-center justify-center">
+            {/* Espaço permanente para evitar deslocamento */}
+            <div className="flex h-3 items-center justify-center">
               <span
-                className={`text-[9px] font-bold uppercase tracking-widest transition-opacity ${
+                className={`text-[8px] font-bold uppercase tracking-widest transition-opacity ${
                   cronometroPausado ? "opacity-60" : "opacity-0"
                 }`}
               >
@@ -122,25 +130,51 @@ function TelaoContent() {
         </div>
 
         {/* EQUIPE DA VEZ */}
-        <div className="flex h-9 shrink-0 items-center justify-center">
-          <div className="rounded-full border border-slate-700 bg-slate-900 px-5 py-1.5 text-xs font-black uppercase tracking-widest text-yellow-400">
+        <div className="flex h-8 shrink-0 items-center justify-center sm:h-9">
+          <div className="rounded-full border border-slate-700 bg-slate-900 px-4 py-1 text-[10px] font-black uppercase tracking-widest text-yellow-400 sm:text-xs">
             {equipeDaVez} responde
           </div>
         </div>
 
-        {/* PERGUNTA */}
-        <div className="flex min-h-0 flex-1 justify-center">
-          <Question
-            pergunta={pergunta}
-            numero={estado.perguntaAtual}
-            total={configuracao.totalPerguntas}
-            respostaVisivel={estado.respostaVisivel}
-          />
+        {/* ÁREA PRINCIPAL */}
+        <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-1 py-1 [scrollbar-width:thin]">
+          <div className="mx-auto flex min-h-full w-full max-w-5xl items-start justify-center">
+            <Question
+              pergunta={pergunta}
+              numero={estado.perguntaAtual}
+              total={configuracao.totalPerguntas}
+              respostaVisivel={estado.respostaVisivel}
+            />
+          </div>
+        </div>
+
+        {/* RESULTADO — ALTURA RESERVADA */}
+        <div className="flex h-12 shrink-0 items-center justify-center sm:h-14">
+          <div
+            className={`w-full max-w-xl rounded-lg px-4 py-2 text-center transition-opacity duration-200 ${
+              estado.resultado
+                ? estado.resultado === "correta"
+                  ? "bg-green-500/10 text-green-300 ring-1 ring-green-500/30 opacity-100"
+                  : "bg-red-500/10 text-red-300 ring-1 ring-red-500/30 opacity-100"
+                : "pointer-events-none opacity-0"
+            }`}
+          >
+            <p className="text-[8px] font-black uppercase tracking-widest">
+              Resultado
+            </p>
+
+            <p className="text-base font-black sm:text-lg">
+              {estado.resultado === "correta"
+                ? "Resposta correta!"
+                : "Resposta incorreta"}
+            </p>
+          </div>
         </div>
       </section>
 
-      <footer className="flex h-9 shrink-0 items-center justify-center border-t border-slate-800 px-5">
-        <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-600 sm:text-[10px]">
+      {/* FOOTER */}
+      <footer className="flex h-7 shrink-0 items-center justify-center border-t border-slate-800 px-4 sm:h-8">
+        <p className="text-[8px] font-bold uppercase tracking-[0.2em] text-slate-600 sm:text-[9px]">
           {partida.nome} • {new Date(partida.data).toLocaleDateString("pt-BR")}
         </p>
       </footer>
@@ -153,7 +187,8 @@ export default function TelaoPage() {
 
   return (
     <GameProvider partidaId={params.id} role="display">
-      <TelaoContent />
+      {" "}
+      <TelaoContent />{" "}
     </GameProvider>
   );
 }

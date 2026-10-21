@@ -15,6 +15,12 @@ export interface Pontuacao {
   equipe2: number;
 }
 
+export interface BuzzerState {
+  jogador: "P1" | "P2";
+  equipe: EquipeDaVez;
+  timestamp: number;
+}
+
 export interface EstadoJogo {
   partidaId: string;
 
@@ -55,6 +61,11 @@ export interface EstadoJogo {
    * decidir revelar o gabarito.
    */
   respostaVisivel: boolean;
+
+  /**
+   * Estado do botão acionado pela Máquina de Quiz física ou simulada
+   */
+  buzzerAtivo?: BuzzerState | null;
 }
 
 export interface ConfiguracaoJogo {

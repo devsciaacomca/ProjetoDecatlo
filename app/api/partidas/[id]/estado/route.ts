@@ -96,14 +96,39 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
       return errorResponse("Pontuação inválida.", 400);
     }
 
-    const partida = await prisma.partida.findUnique({
-      where: {
-        id,
-      },
-    });
+    const fallbackStore = globalThis as unknown as {
+      __decatloFallbackPartidas?: Map<string, any>;
+    };
+    if (!fallbackStore.__decatloFallbackPartidas) {
+      fallbackStore.__decatloFallbackPartidas = new Map();
+    }
+
+    let partida: any = null;
+    try {
+      partida = await prisma.partida.findUnique({
+        where: { id },
+      });
+    } catch (dbErr) {
+      console.warn(`[Estado API] Banco offline ao salvar estado (${id}). Salvando em memória local.`);
+    }
 
     if (!partida) {
-      return errorResponse("Partida não encontrada.", 404);
+      // Atualiza na memória fallback
+      const prev = fallbackStore.__decatloFallbackPartidas.get(id) || {};
+      const updatedFallback = {
+        ...prev,
+        status: statusBanco(body.status),
+        perguntaAtual: body.perguntaAtual,
+        pontuacaoEquipeA: body.pontos.equipe1,
+        pontuacaoEquipeB: body.pontos.equipe2,
+        equipeDaVez: body.equipeDaVez,
+        tempoRestante: body.tempoRestante,
+        cronometroFimEm: body.cronometroFimEm ? new Date(body.cronometroFimEm) : null,
+        respostaVisivel: Boolean(body.respostaVisivel),
+        resultadoPergunta: body.resultado,
+      };
+      fallbackStore.__decatloFallbackPartidas.set(id, updatedFallback);
+      return successResponse(updatedFallback, "Estado da partida salvo (Modo Demonstração).");
     }
 
     const novoStatus = statusBanco(body.status);

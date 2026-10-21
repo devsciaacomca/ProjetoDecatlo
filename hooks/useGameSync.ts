@@ -79,6 +79,15 @@ export type GameAction =
   | {
       type: "RESETAR_PARTIDA";
       estado: EstadoJogo;
+    }
+  | {
+      type: "BUZZER_PRESS";
+      jogador: "P1" | "P2";
+      equipe: "A" | "B";
+      timestamp: number;
+    }
+  | {
+      type: "BUZZER_RESET";
     };
 
 type GameMessage =
@@ -185,9 +194,12 @@ export function useGameSync({
           }
 
           socket.emit("sync-game-state", {
-            type: "STATE_RESPONSE",
-            state: estadoRef.current,
-          } satisfies GameMessage);
+            partidaId,
+            message: {
+              type: "STATE_RESPONSE",
+              state: estadoRef.current,
+            } satisfies GameMessage,
+          });
           break;
         }
 
@@ -209,8 +221,52 @@ export function useGameSync({
 
     socket.on("game-state-updated", handleMessage);
 
+    // Escuta eventos vindos diretamente da Máquina de Quiz (Arduino USB ou Simulador)
+    const handleQuizBuzzer = (data: {
+      jogador: "P1" | "P2";
+      equipe: "A" | "B";
+      timestamp: number;
+    }) => {
+      onAction({
+        type: "BUZZER_PRESS",
+        jogador: data.jogador,
+        equipe: data.equipe,
+        timestamp: data.timestamp,
+      });
+    };
+
+    const handleQuizReset = () => {
+      onAction({ type: "BUZZER_RESET" });
+    };
+
+    socket.on("quiz-machine:buzzer", handleQuizBuzzer);
+    socket.on("quiz-machine:reset", handleQuizReset);
+
+    const handleQuizStatus = (statusData: {
+      locked?: boolean;
+      activePlayer?: "P1" | "P2" | null;
+      lastTimestamp?: number | null;
+    }) => {
+      if (statusData && statusData.locked && statusData.activePlayer) {
+        onAction({
+          type: "BUZZER_PRESS",
+          jogador: statusData.activePlayer,
+          equipe: statusData.activePlayer === "P1" ? "A" : "B",
+          timestamp: statusData.lastTimestamp || Date.now(),
+        });
+      } else if (statusData && !statusData.locked) {
+        onAction({ type: "BUZZER_RESET" });
+      }
+    };
+
+    socket.on("quiz-machine:status", handleQuizStatus);
+    socket.emit("quiz-machine:get-status", handleQuizStatus);
+
     return () => {
       socket.off("game-state-updated", handleMessage);
+      socket.off("quiz-machine:buzzer", handleQuizBuzzer);
+      socket.off("quiz-machine:reset", handleQuizReset);
+      socket.off("quiz-machine:status", handleQuizStatus);
       socket.disconnect();
       socketRef.current = null;
       setConectado(false);

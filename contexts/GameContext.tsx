@@ -73,6 +73,8 @@ interface GameContextValue {
   mostrarResposta: () => void;
   esconderResposta: () => void;
   resetarPartida: () => void;
+  acionarBuzzer: (jogador: "P1" | "P2") => void;
+  resetarBuzzer: () => void;
 }
 interface GameProviderProps {
   children: ReactNode;
@@ -114,6 +116,7 @@ function criarEstado(partida: PartidaBanco): EstadoJogo {
       partida.resultadoPergunta === "incorreta"
         ? partida.resultadoPergunta
         : null,
+    buzzerAtivo: null,
   };
 }
 function aplicarAcao(estado: EstadoJogo, action: GameAction): EstadoJogo {
@@ -160,10 +163,28 @@ function aplicarAcao(estado: EstadoJogo, action: GameAction): EstadoJogo {
         respostaSelecionada: null,
         equipeQueRespondeu: null,
         resultado: null,
+        buzzerAtivo: null,
       };
     case "TROCAR_EQUIPE":
     case "DEFINIR_EQUIPE":
       return { ...estado, equipeDaVez: action.equipeDaVez };
+
+    case "BUZZER_PRESS":
+      return {
+        ...estado,
+        equipeDaVez: action.equipe,
+        buzzerAtivo: {
+          jogador: action.jogador,
+          equipe: action.equipe,
+          timestamp: action.timestamp,
+        },
+      };
+
+    case "BUZZER_RESET":
+      return {
+        ...estado,
+        buzzerAtivo: null,
+      };
 
     case "SELECIONAR_RESPOSTA":
       return {
@@ -231,7 +252,14 @@ export function GameProvider({ children, partidaId, role }: GameProviderProps) {
         if (!ativo) return;
         const dados = resultado.data as PartidaBanco;
         setPartida(dados);
-        setEstado(criarEstado(dados));
+        setEstado((prev) => {
+          const novo = criarEstado(dados);
+          if (prev?.buzzerAtivo) {
+            novo.buzzerAtivo = prev.buzzerAtivo;
+            novo.equipeDaVez = prev.buzzerAtivo.equipe;
+          }
+          return novo;
+        });
       } catch (error) {
         if (ativo) {
           setErro(
@@ -252,8 +280,34 @@ export function GameProvider({ children, partidaId, role }: GameProviderProps) {
     };
   }, [partidaId]);
   const aplicarAcaoRemota = useCallback((action: GameAction) => {
-    setEstado((atual) => (atual ? aplicarAcao(atual, action) : atual));
-  }, []);
+    setEstado((atual) => {
+      if (!atual) {
+        if (action.type === "BUZZER_PRESS") {
+          return {
+            partidaId,
+            status: "aguardando" as const,
+            perguntaAtual: 1,
+            pontos: { equipe1: 0, equipe2: 0 },
+            equipeDaVez: action.equipe,
+            tempoRestante: 30,
+            cronometroFimEm: null,
+            respostaSelecionada: null,
+            equipeQueRespondeu: null,
+            respostaVisivel: false,
+            resultado: null,
+            buzzerAtivo: {
+              jogador: action.jogador,
+              equipe: action.equipe,
+              timestamp: action.timestamp,
+            },
+          };
+        }
+        return atual;
+      }
+      return aplicarAcao(atual, action);
+    });
+  }, [partidaId]);
+
   const receberEstado = useCallback((novoEstado: EstadoJogo) => {
     setEstado(novoEstado);
   }, []);
@@ -273,6 +327,7 @@ export function GameProvider({ children, partidaId, role }: GameProviderProps) {
     equipeQueRespondeu: null,
     respostaVisivel: false,
     resultado: null,
+    buzzerAtivo: null,
   };
 
   const { conectado, enviarAcao } = useGameSync({
@@ -527,8 +582,26 @@ export function GameProvider({ children, partidaId, role }: GameProviderProps) {
     inicial.resultado = null;
     inicial.respostaSelecionada = null;
     inicial.equipeQueRespondeu = null;
+    inicial.buzzerAtivo = null;
     executarAcao({ type: "RESETAR_PARTIDA", estado: inicial });
   }, [partida, executarAcao]);
+
+  const acionarBuzzer = useCallback(
+    (jogador: "P1" | "P2") => {
+      const equipe = jogador === "P1" ? "A" : "B";
+      executarAcao({
+        type: "BUZZER_PRESS",
+        jogador,
+        equipe,
+        timestamp: Date.now(),
+      });
+    },
+    [executarAcao],
+  );
+
+  const resetarBuzzer = useCallback(() => {
+    executarAcao({ type: "BUZZER_RESET" });
+  }, [executarAcao]);
   const configuracao = useMemo<ConfiguracaoJogo>(
     () => ({
       tempoResposta: partida?.tempoResposta ?? 30,
@@ -593,6 +666,8 @@ export function GameProvider({ children, partidaId, role }: GameProviderProps) {
         mostrarResposta,
         esconderResposta,
         resetarPartida,
+        acionarBuzzer,
+        resetarBuzzer,
       }}
     >
       {" "}

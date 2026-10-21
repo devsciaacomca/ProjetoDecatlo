@@ -38,15 +38,20 @@ export async function authenticate(
   try {
     const identificador = normalizarIdentificador(identifier);
 
-    const user = await prisma.user.findFirst({
-      where:
-        identificador.tipo === "nip"
-          ? { nip: identificador.valor }
-          : { email: identificador.valor },
-      include: {
-        role: true,
-      },
-    });
+    let user: any = null;
+    try {
+      user = await prisma.user.findFirst({
+        where:
+          identificador.tipo === "nip"
+            ? { nip: identificador.valor }
+            : { email: identificador.valor },
+        include: {
+          role: true,
+        },
+      });
+    } catch (dbErr) {
+      console.warn("[Login Action] Banco offline ao checar role, prosseguindo com autenticação.");
+    }
 
     const callbackUrl = destinoSeguro(
       String(formData.get("callbackUrl") ?? "/dashboard"),

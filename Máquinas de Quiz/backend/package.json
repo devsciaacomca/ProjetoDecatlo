@@ -1,0 +1,15 @@
+{
+  "name": "gincana-backend",
+  "version": "1.0.0",
+  "description": "Backend bridge to connect Arduino to Web UI",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "serialport": "^12.0.0",
+    "socket.io": "^4.7.2",
+    "cors": "^2.8.5"
+  }
+}

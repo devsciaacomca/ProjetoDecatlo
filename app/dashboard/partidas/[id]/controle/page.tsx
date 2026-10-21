@@ -7,7 +7,9 @@ import {
   ArrowLeft,
   ArrowLeftCircle,
   ArrowRight,
+  Bell,
   Check,
+  Cpu,
   Eye,
   EyeOff,
   Minus,
@@ -22,7 +24,9 @@ import {
   X,
 } from "lucide-react";
 
+import { useState } from "react";
 import { GameProvider, useGame } from "@/contexts/GameContext";
+import QuizMachineSimulator from "@/components/quiz-machine/QuizMachineSimulator";
 
 function ControleContent() {
   const params = useParams<{ id: string }>();
@@ -59,7 +63,11 @@ function ControleContent() {
 
     mostrarResposta,
     esconderResposta,
+    acionarBuzzer,
+    resetarBuzzer,
   } = useGame();
+
+  const [mostrarSimulador, setMostrarSimulador] = useState(false);
 
   if (carregando) {
     return (
@@ -122,6 +130,23 @@ function ControleContent() {
               {sincronizado ? "Telão conectado" : "Aguardando telão"}
             </div>
 
+            {/* BOTÃO TOGGLE DA MÁQUINA DE QUIZ */}
+            <button
+              type="button"
+              onClick={() => setMostrarSimulador(!mostrarSimulador)}
+              className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-semibold transition ${
+                mostrarSimulador
+                  ? "border-yellow-500 bg-yellow-50 text-yellow-900 ring-2 ring-yellow-200"
+                  : "border-slate-300 bg-white hover:bg-slate-50 text-slate-800"
+              }`}
+            >
+              <Cpu
+                size={17}
+                className={mostrarSimulador ? "text-yellow-600" : "text-slate-500"}
+              />
+              {mostrarSimulador ? "Ocultar Máquina" : "Máquina de Quiz"}
+            </button>
+
             <Link
               href={`/telao/${params.id}`}
               target="_blank"
@@ -132,6 +157,46 @@ function ControleContent() {
             </Link>
           </div>
         </header>
+
+        {/* PAINEL SIMULADOR DA MÁQUINA DE QUIZ */}
+        {mostrarSimulador && (
+          <section className="mb-5 animate-in fade-in slide-in-from-top-4 duration-300">
+            <QuizMachineSimulator
+              partidaId={params.id}
+              equipe1Nome={partida.equipe1}
+              equipe2Nome={partida.equipe2}
+            />
+          </section>
+        )}
+
+        {/* ALERTA DE BUZZER ATIVO */}
+        {estado.buzzerAtivo && (
+          <section className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border-2 border-yellow-500 bg-gradient-to-r from-yellow-500/20 via-yellow-500/10 to-transparent p-4 text-slate-900 shadow-md">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 shrink-0 animate-bounce items-center justify-center rounded-xl bg-yellow-500 text-slate-950 font-black shadow-lg">
+                <Bell size={22} />
+              </div>
+              <div>
+                <span className="text-[11px] font-black uppercase tracking-widest text-yellow-800">
+                  ⚡ BUZZER ACIONADO!
+                </span>
+                <p className="text-base font-black text-slate-900 sm:text-lg">
+                  {estado.buzzerAtivo.equipe === "A" ? partida.equipe1 : partida.equipe2}{" "}
+                  ({estado.buzzerAtivo.jogador}) bateu primeiro no botão!
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={resetarBuzzer}
+              className="inline-flex items-center gap-2 rounded-lg bg-yellow-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-yellow-700 active:scale-95"
+            >
+              <RotateCcw size={15} />
+              Resetar Máquina / Liberar Próximo
+            </button>
+          </section>
+        )}
 
         {/* STATUS DA PARTIDA */}
         <section className="mb-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -602,6 +667,16 @@ function ControleContent() {
                 className="w-full rounded-lg bg-slate-100 px-3 py-2.5 text-xs font-semibold hover:bg-slate-200 disabled:opacity-40"
               >
                 Trocar equipe da vez
+              </button>
+
+              {/* BOTÃO RESET BUZZER */}
+              <button
+                type="button"
+                onClick={resetarBuzzer}
+                className="w-full rounded-lg border border-yellow-300 bg-yellow-50 px-3 py-2.5 text-xs font-bold text-yellow-900 hover:bg-yellow-100"
+              >
+                <RotateCcw size={14} className="mr-1 inline" />
+                Resetar Máquina de Quiz
               </button>
             </div>
           </aside>

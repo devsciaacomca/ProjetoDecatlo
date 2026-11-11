@@ -27,7 +27,8 @@ export default function Mascote({
         loop
         muted
         playsInline
-        className="h-56 w-64 object-cover sm:h-64 sm:w-80 lg:h-72 lg:w-96"
+        className="h-full w-full object-fill sm:h-64 sm:w-80 lg:h-72 lg:w-96"
+        
       />
 
       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/80 to-transparent px-4 pb-6 pt-16 flex flex-col items-center">

@@ -228,7 +228,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
       });
     }
 
-    if (houveMudancaPergunta) {
+    /*if (houveMudancaPergunta) {
       await registrarAuditoria({
         session,
         acao: "ALTERACAO_PERGUNTA",
@@ -290,7 +290,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
           resultadoNovo: body.resultado,
         },
       });
-    }
+    }*/
 
     return successResponse(atualizada, "Estado da partida salvo com sucesso.");
   } catch (error) {

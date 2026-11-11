@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Eye, Pencil, Trash2, Search, ArrowUp, ArrowDown, ArrowUpDown, X, EyeOff, ClipboardList } from "lucide-react";
-
+import { useRef, ChangeEvent} from 'react';
 import type { Pergunta } from "@/types/perguntas";
+import QuestionForm from "@/components/perguntas/QuestionForm";
 
 type ApiData = {
   registros: Pergunta[];
@@ -27,9 +28,47 @@ export default function GerenciamentoPerguntasPage() {
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
   const [busca, setBusca] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+  //constantes para modal
+
+  const [perguntaEditando,  setPerguntaEditando] = useState <Pergunta | null>(null)
+  const [modalEdicaoAberto, setModalEdicaoAberto] = useState(false)
+  const abrirModalEdicao = (pergunta:Pergunta)=>{
+    setPerguntaEditando(pergunta)
+    setModalEdicaoAberto(true)
+  }
+  const fecharModalEdicao = ()=>{
+    setModalEdicaoAberto(false)
+    setPerguntaEditando(null)
+  }
+
+  const handFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('arquivo_pdf', file);
+
+    try {
+      const response = await fetch('/api/importar-pdf', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (response.ok){
+        alert('PDF importado com sucesso!');
+      }
+    } catch (error) {
+      console.error('Erro:', error);
+    }
+  };
   
   const [pagina, setPagina] = useState(1);
-  const [porPagina, setPorPagina] = useState(20);
+  const [porPagina, setPorPagina] = useState(10);
   const [ordenarPor, setOrdenarPor] = useState("id");
   const [ordem, setOrdem] = useState<"asc" | "desc">("desc");
 
@@ -126,6 +165,21 @@ export default function GerenciamentoPerguntasPage() {
             >
               Exportar PDF
             </Link>
+            <button
+              onClick={handleImportClick}
+              type="button"
+              className="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+              Importar PDF
+            </button>
+            
+            <input
+              type="file"
+              accept="application/pdf"
+              ref={fileInputRef}
+              onChange={handFileChange}
+              className="hidden"
+              />
             <Link
               href="/dashboard/cadastro-perguntas"
               className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
@@ -244,13 +298,15 @@ export default function GerenciamentoPerguntasPage() {
                             <Eye size={14} />
                             Visualizar
                           </button>
-                          <Link
-                            href={`/dashboard/gerenciamento-perguntas/${pergunta.id}/editar`}
-                            className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-medium text-blue-700 hover:bg-blue-100"
+                        {/* incluindo modal */}
+                          <button
+                          type="button"
+                          onClick={()=> abrirModalEdicao(pergunta)}  
+                          className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-medium text-blue-700 hover:bg-blue-100"
                           >
                             <Pencil size={14} />
                             Editar
-                          </Link>
+                          </button>
                           <button
                             type="button"
                             onClick={() => handleExcluir(pergunta.id)}
@@ -354,6 +410,39 @@ export default function GerenciamentoPerguntasPage() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+      {/* modal  */}
+      {modalEdicaoAberto && perguntaEditando && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 ">
+        <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white shadow-2xl ">
+
+          {/* HEADER */}
+          <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">
+                Editar pergunta
+              </h2>
+
+              <p className="text-sm text-slate-500">
+                Altere os dados da pergunta
+              </p>
+            </div>
+<button type="button" onClick={fecharModalEdicao} className="rounded-lg p-2 text-slate-500 hover:bg-slate-100">X</button>
+          </div>
+          {/* CONTEÚDO */}
+          <div className="p-6">
+            <QuestionForm
+            pergunta={perguntaEditando}
+            modo="edicao"
+            onCancel={fecharModalEdicao}
+            onSuccess={()=>{
+              fecharModalEdicao();
+              carregarPerguntas();
+            }}
+            />
+          </div>
+        </div>
         </div>
       )}
     </main>

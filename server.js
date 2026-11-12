@@ -1,3 +1,10 @@
+// Permite iniciar em modo produção de forma multiplataforma (Windows/Linux)
+// com `node server.js --production`, sem depender de `NODE_ENV=production`.
+// Precisa ser definido antes de carregar o Next.js.
+if (process.argv.includes("--production")) {
+  process.env.NODE_ENV = "production";
+}
+
 const { createServer } = require("http");
 const { parse } = require("url");
 const next = require("next");
@@ -41,6 +48,8 @@ app.prepare().then(() => {
   const PORT = process.env.PORT || 3000;
   server.listen(PORT, (err) => {
     if (err) throw err;
-    console.log(`> Servidor pronto em http://localhost:${PORT}`);
+    console.log(
+      `> Servidor pronto em http://localhost:${PORT} (${dev ? "desenvolvimento" : "produção"})`
+    );
   });
 });

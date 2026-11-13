@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports -- Arquivo CommonJS executado diretamente pelo Node/PM2. */
 // Configuração do PM2 para a aplicação Next.js + WebSocket (Socket.IO).
 //
 // Uso:

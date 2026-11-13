@@ -17,7 +17,7 @@ export default async function TelaoPage() {
   const partidas = await prisma.partida.findMany({
     where: {
       status: {
-        not: "finalizada",
+        in: ["pronta", "em_andamento", "pausada"],
       },
     },
     orderBy: {
@@ -48,7 +48,7 @@ export default async function TelaoPage() {
                 <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent opacity-0 transition group-hover:opacity-100" />
                 <div className="relative z-10">
                   <p className="text-xs font-black uppercase tracking-widest text-cyan-400 mb-3">
-                    {partida.status.replace("_", " ")}
+                    {partida.status === "pausada" ? "Em andamento · pausada" : partida.status.replace("_", " ")}
                   </p>
                   <h2 className="text-xl font-bold mb-6 line-clamp-2 leading-tight">
                     {partida.nome}

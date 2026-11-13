@@ -21,7 +21,7 @@ export function successResponse<T>(data: T, message: string = 'Operação realiz
 }
 
 // Formato padrão de resposta de erro
-export function errorResponse(error: string, status: number = 400, details?: any) {
+export function errorResponse(error: string, status: number = 400, details?: unknown) {
   return NextResponse.json(
     {
       success: false, // Indica para o front que algo deu errado

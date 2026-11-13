@@ -12,7 +12,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     let body;
     try {
       body = await request.json();
-    } catch (e) {
+    } catch {
       body = {};
     }
 

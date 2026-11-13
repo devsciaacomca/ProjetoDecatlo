@@ -21,7 +21,7 @@ export async function GET() {
     ] = await Promise.all([
       prisma.pergunta.count(),
       prisma.partida.count(),
-      prisma.partida.count({ where: { status: "em_andamento" } }),
+      prisma.partida.count({ where: { status: { in: ["em_andamento", "pausada"] } } }),
       prisma.partida.count({ where: { status: "finalizada" } }),
       prisma.user.count({ where: { ativo: true } }),
       prisma.partida.findFirst({
@@ -40,7 +40,7 @@ export async function GET() {
         },
       }),
       prisma.partida.findFirst({
-        where: { status: "em_andamento" },
+        where: { status: { in: ["em_andamento", "pausada"] } },
         orderBy: { atualizadaEm: "desc" },
         select: {
           id: true,

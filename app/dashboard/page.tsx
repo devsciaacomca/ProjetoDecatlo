@@ -83,6 +83,8 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
+    // A carga é assíncrona; atualiza a interface quando a API responder.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     carregar();
   }, [carregar]);
 
@@ -167,7 +169,7 @@ export default function DashboardPage() {
                     <div className="flex items-center gap-1.5">
                       <span className="h-2 w-2 rounded-full bg-green-500" />
                       <span className="text-[10px] font-bold uppercase tracking-wide text-green-700">
-                        Em andamento
+                        {partida.status === "pausada" ? "Em andamento · pausada" : "Em andamento"}
                       </span>
                     </div>
 

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Plus, Gamepad2, PlayCircle, Search, ArrowRight } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
 
-type PartidaStatus = "configuracao" | "pronta" | "em_andamento" | "finalizada";
+type PartidaStatus = "configuracao" | "pronta" | "em_andamento" | "pausada" | "finalizada";
 
 type Partida = {
   id: string;
@@ -13,6 +13,8 @@ type Partida = {
   equipe1: string;
   equipe2: string;
   status: PartidaStatus;
+  statusLista?: PartidaStatus;
+  estadoCronometro?: "ativo" | "pausado" | "inativo";
   perguntas: number;
   perguntaAtual: number;
   data: string;
@@ -33,6 +35,7 @@ const statusConfig: Record<
     label: "Pronta",
     className: "bg-blue-100 text-blue-700",
   },
+  pausada: { label: "Pausada", className: "bg-amber-100 text-amber-800" },
   em_andamento: {
     label: "Ao vivo",
     className: "bg-green-100 text-green-700",
@@ -86,15 +89,16 @@ export default function PartidasPage() {
         partida.equipe1.toLowerCase().includes(termo) ||
         partida.equipe2.toLowerCase().includes(termo);
 
+      const statusLista = partida.statusLista ?? (partida.status === "pausada" ? "em_andamento" : partida.status);
       const correspondeStatus =
-        filtroStatus === "todas" || partida.status === filtroStatus;
+        filtroStatus === "todas" || statusLista === filtroStatus;
 
       return correspondeBusca && correspondeStatus;
     });
   }, [partidas, busca, filtroStatus]);
 
   const partidaEmAndamento = partidas.find(
-    (partida) => partida.status === "em_andamento",
+    (partida) => ["em_andamento", "pausada"].includes(partida.status),
   );
 
   return (
@@ -220,9 +224,8 @@ export default function PartidasPage() {
           ) : (
             <div className="space-y-4">
               {partidasFiltradas.map((partida) => {
-                const status =
-                  statusConfig[partida.status as keyof typeof statusConfig] ??
-                  statusConfig.configuracao;
+                const statusReal = partida.statusLista ?? (partida.status === "pausada" ? "em_andamento" : partida.status);
+                const status = statusConfig[statusReal] ?? statusConfig.configuracao;
 
                 return (
                   <div
@@ -254,7 +257,7 @@ export default function PartidasPage() {
                                 )}
                               </span>
                               <span>{partida.perguntas} perguntas</span>
-                              {partida.status === "em_andamento" && (
+                              {["em_andamento", "pausada"].includes(partida.status) && (
                                 <span>
                                   Pergunta {partida.perguntaAtual} de{" "}
                                   {partida.perguntas}

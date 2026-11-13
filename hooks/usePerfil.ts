@@ -34,6 +34,8 @@ export function usePerfil() {
   const [salvandoSenha, setSalvandoSenha] = useState(false);
 
   useEffect(() => {
+    // Sincroniza os campos editáveis quando os dados da sessão forem atualizados.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setNome(user?.nome ?? user?.name ?? "");
     setEmail(user?.email ?? "");
   }, [user?.nome, user?.name, user?.email]);

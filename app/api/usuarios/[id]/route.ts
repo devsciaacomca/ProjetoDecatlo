@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { Prisma } from "@/app/generated/prisma/client";
 import bcrypt from "bcryptjs";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -9,7 +10,6 @@ import {
 } from "@/lib/api-response";
 import { updateUserSchema } from "@/lib/validations/usuarios";
 import { hasPermission } from "@/lib/permissions";
-import { registrarAuditoria } from "@/lib/auditoria";
 
 /**
  * GET: Busca detalhes de um usuário específico
@@ -78,7 +78,7 @@ export async function PUT(
     let body;
     try {
       body = await request.json();
-    } catch (e) {
+    } catch {
       body = {};
     }
 
@@ -93,15 +93,15 @@ export async function PUT(
     }
 
     const dadosAtualizacao = validation.data;
-    const updateData: any = {};
+    const updateData: Prisma.UserUpdateInput = {};
 
-    if (dadosAtualizacao.nome) updateData.nome = dadosAtualizacao.nome;
-    if (dadosAtualizacao.idade) updateData.idade = dadosAtualizacao.idade;
+    if (dadosAtualizacao.nome !== undefined) updateData.nome = dadosAtualizacao.nome;
+    if (dadosAtualizacao.idade !== undefined) updateData.idade = dadosAtualizacao.idade;
 
     // Apenas quem tem a permissão gerenciar pode alterar o E-mail ou a Role de outro usuário de forma livre
     // Um usuário comum só altera e-mail pelo /api/usuario/perfil
     if (hasPermission(session, "usuarios.gerenciar")) {
-      if (dadosAtualizacao.email) updateData.email = dadosAtualizacao.email;
+      if (dadosAtualizacao.email !== undefined) updateData.email = dadosAtualizacao.email;
       if (dadosAtualizacao.role) {
         const roleExistente = await prisma.role.findUnique({
           where: { nome: dadosAtualizacao.role },
@@ -112,7 +112,7 @@ export async function PUT(
             400,
           );
         }
-        updateData.roleId = roleExistente.id;
+        updateData.role = { connect: { id: roleExistente.id } };
       }
     }
 
@@ -123,10 +123,10 @@ export async function PUT(
     }
 
     // Validar conflitos de email se estiver sendo alterado
-    if (updateData.email) {
+    if (dadosAtualizacao.email !== undefined) {
       const conflito = await prisma.user.findFirst({
         where: {
-          email: updateData.email,
+          email: dadosAtualizacao.email,
           id: { not: parseInt(id) },
         },
       });

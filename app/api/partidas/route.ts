@@ -44,7 +44,15 @@ export async function GET(request: NextRequest) {
       orderBy: { data: "desc" },
     });
 
-    return successResponse(partidas, "Partidas carregadas com sucesso");
+    const partidasNormalizadas = partidas.map((partida) => ({
+      ...partida,
+      // Uma partida pausada continua sendo uma partida ativa; o cronômetro
+      // é uma informação separada do ciclo de vida da partida.
+      statusLista: partida.status === "pausada" ? "em_andamento" : partida.status,
+      estadoCronometro: partida.status === "pausada" ? "pausado" : partida.status === "em_andamento" ? "ativo" : "inativo",
+    }));
+
+    return successResponse(partidasNormalizadas, "Partidas carregadas com sucesso");
   } catch (error) {
     console.error("Erro ao buscar partidas:", error);
     return commonErrors.internalServerError();

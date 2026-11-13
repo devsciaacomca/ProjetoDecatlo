@@ -3,7 +3,6 @@
 import { useParams } from "next/navigation";
 
 import Mascote from "@/components/telao/Mascote";
-import Placar from "@/components/telao/Placar";
 import Cronometro from "@/components/telao/Cronometro";
 import Question from "@/components/telao/Question";
 import TelaFinal from "@/components/telao/TelaFinal";

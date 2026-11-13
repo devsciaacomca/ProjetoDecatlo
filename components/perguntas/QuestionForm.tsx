@@ -28,6 +28,8 @@ export default function QuestionForm({
 
     useEffect(()=>{
         if(pergunta){
+            // Este efeito hidrata o formulário quando a pergunta selecionada muda.
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setEnunciado(pergunta.enunciado?? "");
             setAlternativas(
                 pergunta.alternativas?.length?pergunta.alternativas.map((alternativa)=> alternativa.texto):["","","",""]);

@@ -7,7 +7,6 @@ import {
   List,
   LogOut,
   Monitor,
-  PlayCircle,
   PlusCircle,
   Users,
   X,

@@ -25,6 +25,7 @@ export default async function ImprimirPerguntasPage() {
 
   return (
     <div className="bg-white min-h-screen text-black p-8 print:p-0 mx-auto max-w-4xl" style={{ WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
+      <style>{`@media print { @page { size: A4; margin: 14mm; } body { background: white !important; } .question-answer { break-inside: avoid; } }`}</style>
       <div className="mb-8 border-b-2 border-black pb-4 text-center mt-4">
         <h1 className="text-3xl font-black uppercase tracking-widest">Decatlo</h1>
         <p className="text-lg font-bold mt-2">Banco de Perguntas - Com Gabarito e Explicação</p>
@@ -32,7 +33,7 @@ export default async function ImprimirPerguntasPage() {
 
       <div className="space-y-12">
         {perguntas.map((pergunta, index) => (
-          <div key={pergunta.id} className="break-inside-avoid">
+          <div key={pergunta.id} className="break-inside-auto">
             <div className="flex gap-2 text-sm font-bold uppercase text-slate-500 mb-2 border-b border-slate-200 pb-1">
               <span>#{pergunta.id}</span>
               <span>•</span>

@@ -50,7 +50,7 @@ export async function PUT(request: NextRequest) {
     let body;
     try {
       body = await request.json();
-    } catch (e) {
+    } catch {
       body = {};
     }
 

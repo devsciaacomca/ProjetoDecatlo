@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports -- Arquivo CommonJS executado diretamente pelo Node/PM2. */
 // Script de deploy: `npm run deploy`
 //
 // 1. Instala as dependências (inclui devDependencies, necessárias para o build)

@@ -258,7 +258,7 @@ export function GameProvider({ children, partidaId, role }: GameProviderProps) {
     setEstado(novoEstado);
   }, []);
 
-  const estadoSeguro = estado ?? {
+  const estadoSeguro = useMemo(() => estado ?? {
     partidaId,
     status: "aguardando" as const,
     perguntaAtual: 1,
@@ -273,7 +273,7 @@ export function GameProvider({ children, partidaId, role }: GameProviderProps) {
     equipeQueRespondeu: null,
     respostaVisivel: false,
     resultado: null,
-  };
+  }, [estado, partidaId]);
 
   const { conectado, enviarAcao } = useGameSync({
     partidaId,
@@ -316,11 +316,13 @@ export function GameProvider({ children, partidaId, role }: GameProviderProps) {
     },
     [role, persistirEstado, enviarAcao],
   );
-  /** * Cronômetro. */ useEffect(() => {
+  /** * Cronômetro. */
+  const statusCronometro = estado?.status;
+  const cronometroFimEm = estado?.cronometroFimEm;
+  useEffect(() => {
     if (
-      !estado ||
-      estado.status !== "em_andamento" ||
-      estado.cronometroFimEm === null
+      statusCronometro !== "em_andamento" ||
+      cronometroFimEm == null
     ) {
       return;
     }
@@ -351,7 +353,7 @@ export function GameProvider({ children, partidaId, role }: GameProviderProps) {
     atualizar();
     const interval = window.setInterval(atualizar, 200);
     return () => window.clearInterval(interval);
-  }, [estado?.status, estado?.cronometroFimEm, role, persistirEstado]);
+  }, [statusCronometro, cronometroFimEm, role, persistirEstado]);
 
   const iniciarPartida = useCallback(() => {
     const fim = Date.now() + estadoSeguro.tempoRestante * 1000;

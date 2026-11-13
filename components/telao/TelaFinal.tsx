@@ -35,13 +35,6 @@ export default function TelaFinal({
         ? equipe2
         : null;
 
-  const pontosVencedor =
-    vencedor === "A"
-      ? pontos1
-      : vencedor === "B"
-        ? pontos2
-        : 0;
-
   const videoVencedor =
     vencedor === "A"
       ? videoEquipe1

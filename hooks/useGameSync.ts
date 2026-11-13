@@ -106,8 +106,6 @@ interface UseGameSyncProps {
   onStateReceived: (state: EstadoJogo) => void;
 }
 
-const CHANNEL_PREFIX = "decatlo-game";
-
 export function useGameSync({
   partidaId,
   role,

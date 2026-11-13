@@ -7,6 +7,15 @@ export default auth((request) => {
   const isOnDashboard =
     pathname === "/dashboard" || pathname.startsWith("/dashboard/");
   const isOnLogin = pathname === "/login";
+  const role = request.auth?.user?.role;
+
+  if (isLoggedIn && role === "Usuário" && isOnDashboard) {
+    return NextResponse.redirect(new URL("/area-usuario", request.nextUrl.origin));
+  }
+
+  if (isLoggedIn && role === "Usuário" && isOnLogin) {
+    return NextResponse.redirect(new URL("/area-usuario", request.nextUrl.origin));
+  }
 
   if (isOnDashboard && !isLoggedIn) {
     const loginUrl = new URL("/login", request.nextUrl.origin);
@@ -15,7 +24,8 @@ export default auth((request) => {
   }
 
   if (isOnLogin && isLoggedIn) {
-    return NextResponse.redirect(new URL("/dashboard", request.nextUrl.origin));
+    const destino = role === "Usuário" ? "/area-usuario" : "/dashboard";
+    return NextResponse.redirect(new URL(destino, request.nextUrl.origin));
   }
 
   return NextResponse.next();

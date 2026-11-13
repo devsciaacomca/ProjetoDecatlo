@@ -110,18 +110,6 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
 
     const houveMudancaStatus = partida.status !== novoStatus;
 
-    const houveMudancaPergunta = partida.perguntaAtual !== body.perguntaAtual;
-
-    const houveMudancaEquipe = partida.equipeDaVez !== body.equipeDaVez;
-
-    const houveMudancaPontuacao =
-      partida.pontuacaoEquipeA !== body.pontos.equipe1 ||
-      partida.pontuacaoEquipeB !== body.pontos.equipe2;
-
-    const houveMudancaResposta =
-      Boolean(partida.respostaVisivel) !== Boolean(body.respostaVisivel) ||
-      partida.resultadoPergunta !== body.resultado;
-
     const atualizada = await prisma.partida.update({
       where: {
         id,

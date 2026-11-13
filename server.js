@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports -- Arquivo CommonJS executado diretamente pelo Node/PM2. */
 // Permite iniciar em modo produção de forma multiplataforma (Windows/Linux)
 // com `node server.js --production`, sem depender de `NODE_ENV=production`.
 // Precisa ser definido antes de carregar o Next.js.

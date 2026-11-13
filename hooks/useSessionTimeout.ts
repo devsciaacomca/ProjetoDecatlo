@@ -10,7 +10,7 @@ export function useSessionTimeout() {
   const { data: session, status } = useSession();
 
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const lastActivityRef = useRef<number>(Date.now());
+  const lastActivityRef = useRef<number>(0);
   const lastUpdateRef = useRef<number>(0);
 
   useEffect(() => {
@@ -23,6 +23,8 @@ export function useSessionTimeout() {
     if (session.user.role === "Usuário") {
       return;
     }
+
+    lastActivityRef.current = Date.now();
 
     const logout = async () => {
       if (timeoutRef.current) {

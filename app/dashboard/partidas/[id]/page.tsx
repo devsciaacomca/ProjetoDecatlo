@@ -13,6 +13,7 @@ import {
   Users,
   Trophy,
   AlertCircle,
+  Printer,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -199,6 +200,15 @@ export default function PartidaPage() {
               >
                 <Gamepad2 size={17} />
                 Controle
+              </Link>
+
+              <Link
+                href={`/dashboard/partidas/${partida.id}/imprimir`}
+                target="_blank"
+                className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                <Printer size={17} />
+                Imprimir perguntas
               </Link>
 
               <Link

@@ -8,7 +8,7 @@ export default async function PartidaEmAndamentoPage() {
 
   const partidaEmAndamento = await prisma.partida.findFirst({
     where: {
-      status: "em_andamento",
+      status: { in: ["em_andamento", "pausada"] },
     },
     orderBy: {
       atualizadaEm: "desc",

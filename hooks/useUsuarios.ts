@@ -56,11 +56,18 @@ export function useUsuarios() {
         search: busca,
       });
 
-      setUsuarios(response.data);
-
+      const paginasDisponiveis = Math.max(1, response.meta?.totalPages ?? 1);
       setTotalUsuarios(response.meta?.totalCount ?? 0);
+      setTotalPaginas(paginasDisponiveis);
 
-      setTotalPaginas(response.meta?.totalPages ?? 1);
+      // Se a página atual deixou de existir (por exemplo, após excluir registros),
+      // corrige a paginação e deixa o efeito de carregamento buscar a página válida.
+      if (paginaAtual > paginasDisponiveis) {
+        setPaginaAtual(paginasDisponiveis);
+        return;
+      }
+
+      setUsuarios(response.data);
     } catch (error) {
       console.error(error);
 
@@ -79,16 +86,6 @@ export function useUsuarios() {
 
     return () => clearTimeout(timeoutId);
   }, [carregarUsuarios]);
-
-  useEffect(() => {
-    setPaginaAtual(1);
-  }, [busca]);
-
-  useEffect(() => {
-    if (paginaAtual > totalPaginas) {
-      setPaginaAtual(totalPaginas);
-    }
-  }, [paginaAtual, totalPaginas]);
 
   const abrirCadastro = useCallback(() => {
     setUsuarioEditando(null);
@@ -286,6 +283,11 @@ export function useUsuarios() {
     [totalPaginas],
   );
 
+  const atualizarBusca = useCallback((valor: string) => {
+    setBusca(valor);
+    setPaginaAtual(1);
+  }, []);
+
   return {
     usuarios,
     busca,
@@ -300,7 +302,7 @@ export function useUsuarios() {
     usuarioEditando,
     form,
 
-    setBusca,
+    setBusca: atualizarBusca,
     setErro,
 
     carregarUsuarios,

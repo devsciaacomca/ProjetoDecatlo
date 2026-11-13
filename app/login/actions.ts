@@ -52,7 +52,7 @@ export async function authenticate(
       String(formData.get("callbackUrl") ?? "/dashboard"),
     );
 
-    const destino = user?.role.nome === "Usuário" ? "/telao" : callbackUrl;
+    const destino = user?.role.nome === "Usuário" ? "/area-usuario" : callbackUrl;
 
     await signIn("credentials", {
       identifier,

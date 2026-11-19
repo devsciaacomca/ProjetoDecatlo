@@ -5,9 +5,9 @@ export default function Cronometro({ timeLeft }: { timeLeft: number }) {
   return (
     <div
       className={`
-        flex h-32 w-32 shrink-0 items-center justify-center
-        rounded-full border-[6px] bg-slate-950
-        sm:h-40 sm:w-40 lg:h-48 lg:w-48
+        flex h-24 w-24 shrink-0 items-center justify-center
+        rounded-full border-[5px] bg-slate-950
+        sm:h-32 sm:w-32 sm:border-[6px] lg:h-36 lg:w-36
         ${
           danger
             ? "animate-pulse border-red-500"
@@ -20,7 +20,7 @@ export default function Cronometro({ timeLeft }: { timeLeft: number }) {
       <div className="text-center">
         <p
           className={`
-            text-5xl font-black tabular-nums sm:text-6xl
+            text-4xl font-black tabular-nums sm:text-5xl
             ${
               danger
                 ? "text-red-500"
@@ -33,7 +33,7 @@ export default function Cronometro({ timeLeft }: { timeLeft: number }) {
           {timeLeft}
         </p>
 
-        <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-slate-500">
+        <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-slate-500 sm:text-[10px]">
           segundos
         </p>
       </div>

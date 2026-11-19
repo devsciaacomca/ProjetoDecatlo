@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 
 import Mascote from "@/components/telao/Mascote";
@@ -20,6 +21,30 @@ function TelaoContent() {
     erro,
     resetarPartida,
   } = useGame();
+
+  const resultadoChave = estado.resultado
+    ? `${estado.resultado}-${estado.equipeDaVez}-${estado.perguntaAtual}`
+    : null;
+
+  const [prevResultadoChave, setPrevResultadoChave] = useState(resultadoChave);
+  const [resultadoIncorretoVisivel, setResultadoIncorretoVisivel] = useState(
+    estado.resultado === "incorreta",
+  );
+
+  if (resultadoChave !== prevResultadoChave) {
+    setPrevResultadoChave(resultadoChave);
+    setResultadoIncorretoVisivel(estado.resultado === "incorreta");
+  }
+
+  useEffect(() => {
+    if (!resultadoIncorretoVisivel || estado.resultado !== "incorreta") return;
+
+    const timer = window.setTimeout(() => {
+      setResultadoIncorretoVisivel(false);
+    }, 3000);
+
+    return () => window.clearTimeout(timer);
+  }, [resultadoIncorretoVisivel, estado.resultado, resultadoChave]);
 
   if (carregando) {
     return (
@@ -136,13 +161,15 @@ function TelaoContent() {
         </div>
 
         {/* ÁREA PRINCIPAL */}
-        <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-1 py-1 [scrollbar-width:thin]">
-          <div className="mx-auto flex min-h-full w-full max-w-5xl items-start justify-center">
+        <div className="min-h-0 flex-1 overflow-hidden px-1 py-1">
+          <div className="mx-auto flex h-full w-full max-w-5xl items-stretch justify-center">
             <Question
               pergunta={pergunta}
               numero={estado.perguntaAtual}
               total={configuracao.totalPerguntas}
               respostaVisivel={estado.respostaVisivel}
+              resultado={estado.resultado}
+              resultadoChave={resultadoChave}
             />
           </div>
         </div>
@@ -151,11 +178,11 @@ function TelaoContent() {
         <div className="flex h-12 shrink-0 items-center justify-center sm:h-14">
           <div
             className={`w-full max-w-xl rounded-lg px-4 py-2 text-center transition-opacity duration-200 ${
-              estado.resultado
-                ? estado.resultado === "correta"
-                  ? "bg-green-500/10 text-green-300 ring-1 ring-green-500/30 opacity-100"
-                  : "bg-red-500/10 text-red-300 ring-1 ring-red-500/30 opacity-100"
-                : "pointer-events-none opacity-0"
+              estado.resultado === "correta"
+                ? "bg-green-500/10 text-green-300 ring-1 ring-green-500/30 opacity-100"
+                : estado.resultado === "incorreta" && resultadoIncorretoVisivel
+                  ? "bg-red-500/10 text-red-300 ring-1 ring-red-500/30 opacity-100"
+                  : "pointer-events-none opacity-0"
             }`}
           >
             <p className="text-[8px] font-black uppercase tracking-widest">

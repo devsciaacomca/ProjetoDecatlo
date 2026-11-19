@@ -394,8 +394,9 @@ function ControleContent() {
                       <button
                         type="button"
                         disabled={
-                          !estado.respostaSelecionada ||
-                          estado.status === "finalizada"
+                          estado.status === "finalizada" ||
+                          (pergunta.tipo !== "aberta" &&
+                            !estado.respostaSelecionada)
                         }
                         onClick={() => avaliarResposta("correta")}
                         className="inline-flex items-center justify-center gap-2 rounded-lg bg-green-600 px-3 py-2.5 text-sm font-bold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-40"
@@ -407,8 +408,9 @@ function ControleContent() {
                       <button
                         type="button"
                         disabled={
-                          !estado.respostaSelecionada ||
-                          estado.status === "finalizada"
+                          estado.status === "finalizada" ||
+                          (pergunta.tipo !== "aberta" &&
+                            !estado.respostaSelecionada)
                         }
                         onClick={() => avaliarResposta("incorreta")}
                         className="inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 px-3 py-2.5 text-sm font-bold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-40"
